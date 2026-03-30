@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Radar — Logistics Real Estate Scanner</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet"/>
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: #0F2744; color: #555555; font-size: 14px; line-height: 1.65; -webkit-font-smoothing: antialiased; overflow: hidden; }
+nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; height: 56px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; background: #0F2744; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
+.nav-left { display: flex; align-items: center; gap: 12px; }
+.nav-logo { height: 32px; width: auto; display: block; }
+.nav-sep { width: 1px; height: 20px; background: rgba(255,255,255,0.15); }
+.nav-tool-name { font-size: 14px; font-weight: 600; color: #fff; letter-spacing: -0.01em; }
+.nav-tool-sub { font-size: 11px; color: rgba(255,255,255,0.45); letter-spacing: 0.04em; text-transform: uppercase; }
+.nav-right { display: flex; align-items: center; gap: 16px; }
+.nav-badge { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.5); letter-spacing: 0.1em; text-transform: uppercase; background: rgba(255,255,255,0.07); padding: 4px 10px; border-radius: 20px; border: 0.5px solid rgba(255,255,255,0.12); }
+.nav-btn { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.75); background: rgba(255,255,255,0.07); border: 0.5px solid rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-family: 'DM Sans',sans-serif; }
+.nav-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+.nav-btn.outline { background: transparent; border-color: rgba(255,255,255,0.2); }
+.wl-count { background: #C8692A; color: #fff; font-size: 10px; font-weight: 600; width: 18px; height: 18px; border-radius: 50%; display: none; align-items: center; justify-content: center; }
+.wl-count.on { display: flex; }
+.app-body { position: fixed; top: 56px; left: 0; right: 0; bottom: 0; display: flex; }
+/* LEFT PANEL */
+.lp { width: 300px; flex-shrink: 0; background: #fff; border-right: 0.5px solid #E8E5DE; display: flex; flex-direction: column; overflow: hidden; z-index: 100; }
+.lp-head { padding: 16px; border-bottom: 0.5px solid #E8E5DE; flex-shrink: 0; }
+.eyebrow { font-size: 10px; font-weight: 600; color: #aaa; letter-spacing: 0.09em; text-transform: uppercase; margin-bottom: 4px; }
+.lp-title { font-size: 14px; font-weight: 600; color: #0F2744; }
+.res-count { font-size: 11px; color: #888; margin-top: 2px; }
+.res-count span { color: #C8692A; font-weight: 600; }
+.filt { padding: 12px 16px; border-bottom: 0.5px solid #E8E5DE; flex-shrink: 0; }
+.flabel { font-size: 10px; font-weight: 600; color: #aaa; letter-spacing: 0.09em; text-transform: uppercase; margin-bottom: 8px; }
+.frow { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.chip { font-size: 11px; font-weight: 500; color: #555; background: #F7F5F1; border: 0.5px solid #E8E5DE; padding: 4px 10px; border-radius: 20px; cursor: pointer; transition: all 0.12s; white-space: nowrap; }
+.chip:hover { border-color: #C8692A; color: #C8692A; }
+.chip.on { background: #FBF0E9; border-color: #C8692A; color: #7A3A12; font-weight: 600; }
+.chip.all.on { background: #0F2744; border-color: #0F2744; color: #fff; }
+.zchip { font-size: 10px; font-weight: 500; color: #555; background: #F7F5F1; border: 0.5px solid #E8E5DE; padding: 3px 8px; border-radius: 20px; cursor: pointer; transition: all 0.12s; }
+.zchip:hover { border-color: #0F2744; color: #0F2744; }
+.zchip.on { background: #E8EDF3; border-color: #0F2744; color: #0F2744; font-weight: 600; }
+.alist { flex: 1; overflow-y: auto; padding: 8px 0; }
+.alist::-webkit-scrollbar { width: 4px; }
+.alist::-webkit-scrollbar-thumb { background: #E8E5DE; border-radius: 2px; }
+.aitem { padding: 10px 16px; cursor: pointer; border-bottom: 0.5px solid #F2F0EC; transition: background 0.1s; display: flex; align-items: flex-start; gap: 10px; }
+.aitem:hover { background: #F7F5F1; }
+.aitem.on { background: #FBF0E9; border-left: 2px solid #C8692A; }
+.adot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.ainfo { flex: 1; min-width: 0; }
+.aname { font-size: 13px; font-weight: 500; color: #0F2744; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ameta { font-size: 11px; color: #888; margin-top: 1px; }
+.agla { font-size: 11px; font-weight: 600; color: #C8692A; margin-top: 2px; }
+.aflag { font-size: 14px; color: #E8E5DE; flex-shrink: 0; cursor: pointer; transition: color 0.12s; margin-top: 2px; }
+.aflag:hover { color: #C8692A; }
+.empty { padding: 32px 16px; text-align: center; color: #aaa; font-size: 12px; }
+/* MAP */
+.mwrap { flex: 1; position: relative; }
+#map { width: 100%; height: 100%; }
+.mapboxgl-ctrl-logo { display: none !important; }
+/* Zone marker */
+.zm { background: #0F2744; color: #fff; font-family: 'DM Sans',sans-serif; font-size: 11px; font-weight: 600; padding: 6px 12px; border-radius: 20px; white-space: nowrap; cursor: pointer; box-shadow: 0 2px 8px rgba(15,39,68,0.3); border: 1.5px solid rgba(255,255,255,0.2); display: flex; align-items: center; gap: 6px; transition: all 0.15s; }
+.zm:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
+.zmc { background: rgba(255,255,255,0.2); border-radius: 10px; padding: 1px 6px; font-size: 10px; }
+/* Back btn */
+.back-btn { position: absolute; top: 12px; left: 12px; z-index: 400; display: none; align-items: center; gap: 6px; background: #0F2744; color: #fff; font-family: 'DM Sans',sans-serif; font-size: 12px; font-weight: 500; padding: 7px 14px; border-radius: 8px; border: none; cursor: pointer; box-shadow: 0 2px 8px rgba(15,39,68,0.3); }
+.back-btn:hover { background: #1a3a5c; }
+.back-btn.on { display: flex; }
+/* Info bar */
+.ibar { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 400; display: none; background: #0F2744; color: #fff; font-family: 'DM Sans',sans-serif; font-size: 12px; font-weight: 500; padding: 8px 20px; border-radius: 20px; box-shadow: 0 2px 12px rgba(15,39,68,0.4); align-items: center; gap: 12px; white-space: nowrap; }
+.ibar.on { display: flex; }
+.idot { width: 6px; height: 6px; border-radius: 50%; background: #C8692A; }
+/* Legend */
+.legend { position: absolute; bottom: 20px; right: 20px; z-index: 400; background: #fff; border: 0.5px solid #E8E5DE; border-radius: 10px; padding: 12px 14px; font-family: 'DM Sans',sans-serif; }
+.ltitle { font-size: 10px; font-weight: 600; color: #aaa; letter-spacing: 0.09em; text-transform: uppercase; margin-bottom: 8px; }
+.litem { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #555; margin-bottom: 5px; }
+.litem:last-child { margin-bottom: 0; }
+.ldot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+/* RIGHT DRAWER */
+.rdrawer { position: absolute; top: 0; right: 0; bottom: 0; width: 380px; background: #fff; border-left: 0.5px solid #E8E5DE; transform: translateX(100%); transition: transform 0.28s cubic-bezier(0.4,0,0.2,1); z-index: 500; display: flex; flex-direction: column; overflow: hidden; }
+.rdrawer.on { transform: translateX(0); }
+.dhead { padding: 16px; border-bottom: 0.5px solid #E8E5DE; display: flex; align-items: flex-start; justify-content: space-between; flex-shrink: 0; background: #0F2744; }
+.dclose { font-size: 18px; color: rgba(255,255,255,0.5); cursor: pointer; background: none; border: none; padding: 0; line-height: 1; transition: color 0.12s; }
+.dclose:hover { color: #fff; }
+.dname { font-size: 15px; font-weight: 600; color: #fff; line-height: 1.25; flex: 1; margin-right: 12px; }
+.daddr { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+.dbody { flex: 1; overflow-y: auto; }
+.dbody::-webkit-scrollbar { width: 4px; }
+.dbody::-webkit-scrollbar-thumb { background: #E8E5DE; border-radius: 2px; }
+.dsec { padding: 16px; border-bottom: 0.5px solid #F2F0EC; }
+.dsl { font-size: 10px; font-weight: 600; color: #aaa; letter-spacing: 0.09em; text-transform: uppercase; margin-bottom: 12px; }
+.mgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mc { background: #F7F5F1; border-radius: 8px; padding: 10px 12px; }
+.mv { font-size: 18px; font-weight: 600; color: #C8692A; line-height: 1; }
+.ml { font-size: 10px; color: #888; margin-top: 3px; }
+.dr { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 0.5px solid #F2F0EC; }
+.dr:last-child { border-bottom: none; }
+.dk { font-size: 12px; color: #888; }
+.dv { font-size: 12px; font-weight: 500; color: #0F2744; text-align: right; }
+.oblock { display: flex; align-items: center; gap: 10px; }
+.oav { width: 36px; height: 36px; border-radius: 8px; background: #E8EDF3; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #0F2744; flex-shrink: 0; }
+.oname { font-size: 13px; font-weight: 500; color: #0F2744; }
+.otype { font-size: 11px; color: #888; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 20px; }
+.tn { background: #E8EDF3; color: #0F2744; }
+.ta { background: #FBF0E9; color: #7A3A12; }
+.ts { background: #E8F5EE; color: #1a6b3a; }
+.tw { background: #FEF5E7; color: #7a5200; }
+.td { background: #FEECEC; color: #7a1a1a; }
+.ait { background: #F7F5F1; border-radius: 8px; padding: 14px; font-size: 12px; color: #555; line-height: 1.7; border-left: 2px solid #C8692A; }
+.ailabel { font-size: 10px; font-weight: 600; color: #C8692A; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.aidot { width: 6px; height: 6px; border-radius: 50%; background: #C8692A; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+.dactions { padding: 16px; border-top: 0.5px solid #E8E5DE; display: flex; gap: 8px; flex-shrink: 0; }
+.btn-p { flex: 1; background: #C8692A; color: #fff; font-family: 'DM Sans',sans-serif; font-size: 13px; font-weight: 500; padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer; transition: background 0.15s; }
+.btn-p:hover { background: #A85520; }
+.btn-g { background: #fff; color: #0F2744; border: 0.5px solid #E8E5DE; font-family: 'DM Sans',sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; cursor: pointer; }
+.btn-g:hover { background: #F7F5F1; }
+.btn-a { background: #fff; color: #888; border: 0.5px solid #E8E5DE; font-family: 'DM Sans',sans-serif; font-size: 12px; font-weight: 500; padding: 9px 14px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.btn-a:hover { border-color: #C8692A; color: #C8692A; }
+/* WATCHLIST */
+.wlov { position: fixed; inset: 0; z-index: 800; background: rgba(15,39,68,0.4); backdrop-filter: blur(4px); display: none; align-items: flex-start; justify-content: flex-end; padding-top: 56px; }
+.wlov.on { display: flex; }
+.wlp { width: 360px; height: 100%; background: #fff; display: flex; flex-direction: column; border-left: 0.5px solid #E8E5DE; animation: sli 0.25s ease; }
+@keyframes sli { from{transform:translateX(100%)}to{transform:translateX(0)} }
+.wlh { padding: 16px; background: #0F2744; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.wlt { font-size: 14px; font-weight: 600; color: #fff; }
+.wlc { background: none; border: none; font-size: 18px; color: rgba(255,255,255,0.5); cursor: pointer; }
+.wlc:hover { color: #fff; }
+.wlb { flex: 1; overflow-y: auto; padding: 8px 0; }
+.wli { padding: 12px 16px; border-bottom: 0.5px solid #F2F0EC; display: flex; align-items: flex-start; gap: 10px; }
+.wlin { flex: 1; }
+.wlin-n { font-size: 13px; font-weight: 500; color: #0F2744; }
+.wlin-m { font-size: 11px; color: #888; margin-top: 2px; }
+.wlr { font-size: 14px; color: #E8E5DE; cursor: pointer; }
+.wlr:hover { color: #C8692A; }
+.wlf { padding: 16px; border-top: 0.5px solid #E8E5DE; flex-shrink: 0; }
+.wle { padding: 40px 16px; text-align: center; color: #aaa; font-size: 12px; }
+/* MODALS */
+.mov { position: fixed; inset: 0; z-index: 900; background: rgba(15,39,68,0.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; }
+.mov.on { display: flex; }
+.mbox { background: #fff; border-radius: 12px; padding: 28px; width: 420px; border: 0.5px solid #E8E5DE; animation: fu 0.2s ease; }
+@keyframes fu { from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)} }
+.micon { font-size: 32px; margin-bottom: 12px; }
+.mtitle { font-size: 16px; font-weight: 600; color: #0F2744; margin-bottom: 8px; }
+.mbody { font-size: 13px; color: #555; line-height: 1.65; margin-bottom: 16px; }
+.mnote { background: #FBF0E9; border-radius: 8px; padding: 12px; font-size: 12px; color: #7A3A12; margin-bottom: 20px; }
+.uz { border: 1.5px dashed #E8E5DE; border-radius: 8px; padding: 32px; text-align: center; cursor: pointer; transition: all 0.15s; margin: 16px 0; }
+.uz:hover { border-color: #C8692A; background: #FBF0E9; }
+input[type=file] { display: none; }
+/* Mapbox popup */
+.mapboxgl-popup-content { background: #0F2744 !important; color: #fff !important; border-radius: 8px !important; padding: 8px 12px !important; font-family: 'DM Sans',sans-serif !important; box-shadow: 0 2px 12px rgba(0,0,0,0.2) !important; }
+.mapboxgl-popup-tip { border-top-color: #0F2744 !important; border-bottom-color: #0F2744 !important; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-left">
+    <img class="nav-logo" src="https://res.cloudinary.com/dsgfts9gp/image/upload/Gemini_Generated_Image_uao02uao02uao02u-remove-bg-io_mb5sys.png" alt="TP"/>
+    <div class="nav-sep"></div>
+    <div><div class="nav-tool-name">Radar</div><div class="nav-tool-sub">Logistics RE Scanner</div></div>
+  </div>
+  <div class="nav-right">
+    <div class="nav-badge">🇳🇱 Netherlands · Demo</div>
+    <button class="nav-btn outline" onclick="openUpload()">↑ Upload Database</button>
+    <button class="nav-btn" onclick="openWL()">☆ Watchlist <span class="wl-count" id="wlCount">0</span></button>
+  </div>
+</nav>
+
+<div class="app-body">
+  <div class="lp">
+    <div class="lp-head">
+      <div class="eyebrow">Market Scanner</div>
+      <div class="lp-title">Netherlands · All Zones</div>
+      <div class="res-count"><span id="visCnt">67</span> assets · <span id="totSqm">3.4M sqm</span> GLA</div>
+    </div>
+    <div class="filt">
+      <div class="flabel">Asset Size (GLA)</div>
+      <div class="frow" id="fr-gla">
+        <div class="chip all on" onclick="setF('gla','all',this)">All</div>
+        <div class="chip" onclick="setF('gla','small',this)">&lt;10k sqm</div>
+        <div class="chip" onclick="setF('gla','mid',this)">10–30k</div>
+        <div class="chip" onclick="setF('gla','large',this)">&gt;30k</div>
+      </div>
+      <div class="flabel" style="margin-top:10px">Owner Type</div>
+      <div class="frow" id="fr-own">
+        <div class="chip all on" onclick="setF('own','all',this)">All</div>
+        <div class="chip" onclick="setF('own','REIT',this)">REIT</div>
+        <div class="chip" onclick="setF('own','Institutional',this)">Institutional</div>
+        <div class="chip" onclick="setF('own','Private',this)">Private</div>
+        <div class="chip" onclick="setF('own','Owner-Occupier',this)">Owner-Occ.</div>
+      </div>
+      <div class="flabel" style="margin-top:10px">Last Transaction</div>
+      <div class="frow" id="fr-tx">
+        <div class="chip all on" onclick="setF('tx','all',this)">All</div>
+        <div class="chip" onclick="setF('tx','recent',this)">&lt;3 yrs</div>
+        <div class="chip" onclick="setF('tx','mid',this)">3–8 yrs</div>
+        <div class="chip" onclick="setF('tx','old',this)">&gt;8 yrs</div>
+      </div>
+      <div class="flabel" style="margin-top:10px">Zone</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="zchips">
+        <div class="zchip on" onclick="setZone('all',this)">All zones</div>
+        <div class="zchip" onclick="setZone('maasvlakte',this)">Maasvlakte</div>
+        <div class="zchip" onclick="setZone('venlo',this)">Venlo</div>
+        <div class="zchip" onclick="setZone('schiphol',this)">Schiphol</div>
+        <div class="zchip" onclick="setZone('tilburg',this)">Tilburg</div>
+        <div class="zchip" onclick="setZone('almere',this)">Almere</div>
+        <div class="zchip" onclick="setZone('roosendaal',this)">Roosendaal</div>
+      </div>
+    </div>
+    <div class="alist" id="alist"></div>
+    <div style="padding:12px 16px;border-top:0.5px solid #E8E5DE;flex-shrink:0;background:#F7F5F1;">
+      <div style="font-size:10px;font-weight:600;color:#aaa;letter-spacing:0.09em;text-transform:uppercase;margin-bottom:6px">Data Methodology</div>
+      <div style="font-size:11px;color:#888;line-height:1.6">Demo dataset — <strong style="color:#555">121 curated assets</strong> with market-representative financials. Owner types, yield ranges, and submarket dynamics reflect real NL logistics benchmarks.</div>
+      <div style="margin-top:8px;padding:8px 10px;background:#FBF0E9;border-radius:6px;border-left:2px solid #C8692A;">
+        <div style="font-size:10px;font-weight:600;color:#7A3A12;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:3px">Production integration</div>
+        <div style="font-size:11px;color:#7A3A12;line-height:1.55">Real asset data requires <strong>BAG API</strong> (NL govt, free — location + GLA) and <strong>MSCI RCA / CoStar</strong> (transaction history, ownership). Upload your own dataset via CSV using the button above.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mwrap">
+    <div id="map"></div>
+    <button class="back-btn" id="backBtn" onclick="backToOv()">← All Zones</button>
+    <div class="ibar" id="ibar"><div class="idot"></div><span id="ibarTxt">Click a warehouse to open the intelligence panel</span></div>
+    <div class="legend">
+      <div class="ltitle">Owner Type</div>
+      <div class="litem"><div class="ldot" style="background:#2A4A8A;border-radius:50%"></div>REIT</div>
+      <div class="litem"><div class="ldot" style="background:#2A6B4A;border-radius:50%"></div>Institutional</div>
+      <div class="litem"><div class="ldot" style="background:#C8692A;border-radius:50%"></div>Private</div>
+      <div class="litem"><div class="ldot" style="background:#6B2A8A;border-radius:50%"></div>Owner-Occupier</div>
+      <div style="margin-top:10px;padding-top:8px;border-top:0.5px solid #E8E5DE;">
+        <div class="ltitle">Size = GLA</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+          <div style="width:8px;height:8px;border-radius:50%;background:#888;flex-shrink:0"></div>
+          <div style="width:14px;height:14px;border-radius:50%;background:#888;flex-shrink:0"></div>
+          <div style="width:20px;height:20px;border-radius:50%;background:#888;flex-shrink:0"></div>
+          <span style="font-size:10px;color:#888">Small → Large</span>
+        </div>
+      </div>
+    </div>
+    <div class="rdrawer" id="rdrawer">
+      <div class="dhead">
+        <div style="flex:1;min-width:0"><div class="dname" id="dname">—</div><div class="daddr" id="daddr">—</div></div>
+        <button class="dclose" onclick="closeDrawer()">✕</button>
+      </div>
+      <div class="dbody" id="dbody"></div>
+      <div class="dactions">
+        <button class="btn-p" id="wlBtn" onclick="toggleWLfromDrawer()">☆ Add to Watchlist</button>
+        <button class="btn-a" onclick="openAlert()">🔔 Alert</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WATCHLIST -->
+<div class="wlov" id="wlov" onclick="if(event.target===this)closeWL()">
+  <div class="wlp">
+    <div class="wlh"><div class="wlt">☆ Watchlist</div><button class="wlc" onclick="closeWL()">✕</button></div>
+    <div class="wlb" id="wlb"><div class="wle">No assets added yet.<br>Click ☆ on any asset to track it.</div></div>
+    <div class="wlf"><button class="btn-p" style="width:100%" onclick="exportWL()">↓ Export to CSV</button></div>
+  </div>
+</div>
+
+<!-- ALERT MODAL -->
+<div class="mov" id="alertMov" onclick="if(event.target===this)closeAlert()">
+  <div class="mbox">
+    <div class="micon">🔔</div>
+    <div class="mtitle">Transaction Alert</div>
+    <div class="mbody">Radar will notify you by email when a new transaction is recorded for this asset in the database.</div>
+    <div class="mnote"><strong>Premium feature:</strong> Alerts are triggered when new data is ingested via manual upload, API feed, or connected data provider (MSCI RCA, CoStar, Kadaster live feed).</div>
+    <div style="display:flex;gap:8px"><button class="btn-p" onclick="closeAlert()">Enable Alert</button><button class="btn-g" onclick="closeAlert()">Cancel</button></div>
+  </div>
+</div>
+
+<!-- UPLOAD MODAL -->
+<div class="mov" id="upMov" onclick="if(event.target===this)closeUpload()">
+  <div class="mbox">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div class="mtitle" style="margin:0">Upload Asset Database</div>
+      <button class="dclose" style="color:#888;font-size:18px" onclick="closeUpload()">✕</button>
+    </div>
+    <div style="font-size:12px;color:#888;margin-bottom:4px">Layer proprietary data over the base map.</div>
+    <div class="uz" onclick="document.getElementById('fi').click()">
+      <div style="font-size:28px;margin-bottom:8px">📂</div>
+      <div style="font-size:13px;color:#555">Drop file here or click to browse</div>
+      <div style="font-size:11px;color:#aaa;margin-top:4px">CSV · XLSX · Required columns: lat, lng, name, gla_sqm</div>
+    </div>
+    <input type="file" id="fi" accept=".csv,.xlsx" onchange="handleUpload(event)"/>
+    <div style="font-size:11px;color:#aaa;margin-bottom:16px">Your data stays local — nothing is transmitted externally.</div>
+    <div style="display:flex;gap:8px"><button class="btn-p" onclick="closeUpload()">Close</button><button class="btn-g" onclick="dlTemplate()">↓ Template</button></div>
+  </div>
+</div>
+
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoidHBvcnR1bmF0byIsImEiOiJjbW5jdnNoamExM2lmMm9yNnowMm43YWhsIn0.cAWttYM89Ah_dADNRCJiIg';
+
+const ZONES = {
+  maasvlakte:{name:'Maasvlakte / Rotterdam',center:[4.05,51.958],zoom:13,color:'#C8692A'},
+  venlo:{name:'Venlo / Greenport',center:[6.17,51.37],zoom:13,color:'#0F2744'},
+  schiphol:{name:'Schiphol Logistics Park',center:[4.78,52.31],zoom:13,color:'#2A6B4A'},
+  tilburg:{name:'Tilburg / Waalwijk',center:[5.08,51.58],zoom:13,color:'#6B2A8A'},
+  almere:{name:'Almere / Flevoland',center:[5.22,52.37],zoom:13,color:'#2A4A8A'},
+  roosendaal:{name:'Roosendaal / Bergen op Zoom',center:[4.47,51.52],zoom:13,color:'#8A6B2A'}
+};
+
+const ASSETS=[
+  // ── MAASVLAKTE ── (Maasvlakte 1+2 industrial plateau, Europoort, Botlek — all on reclaimed land)
+  {id:'mv01',zone:'maasvlakte',name:'Rotterdam Gateway DC',address:'Coloradoweg 40, Maasvlakte',lat:51.9558,lng:3.9980,gla:52400,built:2018,height:12.5,docks:68,lastTxDate:'2021-03',lastTxPrice:89.4,owner:'Prologis',ownerType:'REIT',wault:6.2,vacancy:0,yield:4.1,estValue:112.0,commentary:'Prime Grade A distribution hub at Europe\'s largest container terminal. Acquired by Prologis in 2021 at 4.5% NIY — cap rate compression has pushed estimated value to ~€112m. Long WAULT of 6.2 years and 100% occupancy make this a core hold. Monitor for lease expiry in 2030 as a potential re-letting or sale trigger.',tags:['Grade A','Core','Port-adjacent']},
+  {id:'mv02',zone:'maasvlakte',name:'Delta Logistics Centre',address:'Mississippihaven 8, Maasvlakte',lat:51.9538,lng:4.0020,gla:34200,built:2014,height:10.5,docks:42,lastTxDate:'2019-06',lastTxPrice:47.2,owner:'Montea NV',ownerType:'REIT',wault:3.1,vacancy:5,yield:4.8,estValue:58.0,commentary:'Older vintage port-adjacent asset. 5% vacancy is a mild concern. Clear height at 10.5m below modern Grade A spec — potential capex on re-letting. Short WAULT of 3.1 years creates near-term asset management opportunity.',tags:['Value-add','Port-adjacent','Re-let risk']},
+  {id:'mv03',zone:'maasvlakte',name:'Europoort Bulk Terminal',address:'Hartelweg 20, Europoort',lat:51.9522,lng:4.0068,gla:28750,built:2008,height:9.0,docks:30,lastTxDate:'2013-11',lastTxPrice:28.5,owner:'Kühne + Nagel',ownerType:'Owner-Occupier',wault:null,vacancy:0,yield:null,estValue:41.0,commentary:'Owner-occupied since 2013. Sale-and-leaseback potential given current appetite for owner-occupier deals in port locations. Estimated vacant possession value ~€41m. Older clear height (9m) limits value to operator-specific use.',tags:['Sale-leaseback candidate','Owner-occupier','Older vintage']},
+  {id:'mv04',zone:'maasvlakte',name:'Port Logistics Hub I',address:'Amazonehaven 12, Maasvlakte',lat:51.9575,lng:3.9942,gla:41800,built:2020,height:13.5,docks:56,lastTxDate:'2022-09',lastTxPrice:78.2,owner:'GLP Europe',ownerType:'Institutional',wault:7.8,vacancy:0,yield:3.9,estValue:98.0,commentary:'Recently traded Grade A asset with modern spec. GLP acquired in 2022 at 3.9% NIY reflecting peak pricing. Long WAULT at 7.8 years provides income visibility. Unlikely to be traded in short term.',tags:['Grade A','Core','Long WAULT']},
+  {id:'mv05',zone:'maasvlakte',name:'Botlek Distribution Park',address:'Chemieweg 18, Botlek',lat:51.8958,lng:4.2848,gla:19200,built:2006,height:8.5,docks:22,lastTxDate:'2016-04',lastTxPrice:18.7,owner:'Private (Veerman BV)',ownerType:'Private',wault:2.3,vacancy:12,yield:6.2,estValue:24.0,commentary:'Private-held older asset with above-market vacancy. Last traded 2016 at a wide yield. Current 6.2% NIY implies motivated seller potential. Capex required to bring to modern spec. Interesting for a buyer willing to take lease-up risk in a tight port market.',tags:['Value-add','Private owner','Vacancy risk']},
+  {id:'mv06',zone:'maasvlakte',name:'Gateway Cold Store',address:'Josefinalaan 7, Maasvlakte',lat:51.9542,lng:4.0108,gla:14500,built:2015,height:14.0,docks:18,lastTxDate:'2020-02',lastTxPrice:32.1,owner:'Lineage Logistics',ownerType:'Institutional',wault:9.1,vacancy:0,yield:4.5,estValue:39.0,commentary:'Specialist cold storage facility with high clear height (14m) purpose-built for refrigerated racking. Lineage is a dominant cold chain operator unlikely to vacate. Very long WAULT. Cold chain assets trade at a premium due to scarcity and operator stickiness.',tags:['Cold storage','Specialist','Core-plus']},
+  {id:'mv07',zone:'maasvlakte',name:'Pernis Cross-Dock',address:'Vondelingenplaat 45, Pernis',lat:51.8882,lng:4.3198,gla:8900,built:2011,height:8.0,docks:24,lastTxDate:'2018-07',lastTxPrice:9.8,owner:'Private (De Groot Logistics)',ownerType:'Private',wault:1.8,vacancy:0,yield:5.8,estValue:12.5,commentary:'Small cross-dock with very short WAULT — lease renewal risk is the primary concern. Private owner, no known disposal mandate. Below institutional lot size which limits buyer pool.',tags:['Cross-dock','Small lot','WAULT risk']},
+  {id:'mv08',zone:'maasvlakte',name:'Euromax Logistics I',address:'Lloydstraat 22, Maasvlakte',lat:51.9592,lng:3.9898,gla:63100,built:2019,height:12.5,docks:82,lastTxDate:'2023-01',lastTxPrice:104.5,owner:'Segro PLC',ownerType:'REIT',wault:8.4,vacancy:0,yield:3.8,estValue:118.0,commentary:'Largest Grade A asset in this cluster by GLA. Segro paid peak pricing in early 2023. Trophy core asset unlikely to trade. Watch for Segro capital recycling activity as a potential disposal signal.',tags:['Grade A','Trophy','REIT-owned']},
+  {id:'mv09',zone:'maasvlakte',name:'Container Terminal DC',address:'Mississippihaven 32, Maasvlakte',lat:51.9510,lng:4.0148,gla:22300,built:2016,height:11.0,docks:28,lastTxDate:'2024-05',lastTxPrice:38.4,owner:'Hines',ownerType:'Institutional',wault:5.6,vacancy:0,yield:4.3,estValue:40.0,commentary:'Recently traded in 2024 — market pricing reflects current yield environment. Hines is an active trader so potential disposal in medium term. NIY aligns with current benchmarks for port-adjacent Grade B/A- stock.',tags:['Recent transaction','Core','Mid-size']},
+  {id:'mv10',zone:'maasvlakte',name:'Calandkanaal Warehouse',address:'Calandkanaal Noord 14, Europoort',lat:51.9028,lng:4.2588,gla:11700,built:2003,height:7.5,docks:14,lastTxDate:'2011-03',lastTxPrice:8.2,owner:'Private (Van den Berg BV)',ownerType:'Private',wault:4.2,vacancy:8,yield:null,estValue:15.0,commentary:'Not traded for over 13 years. Private owner with limited institutional engagement. Below-spec clear height. Strong candidate for off-market outreach: owner may be unaware of current land value dynamics in this location.',tags:['Older vintage','Long hold','Off-market potential']},
+  {id:'mv11',zone:'maasvlakte',name:'Shell Pernis Logistics Annex',address:'Vondelingenweg 601, Pernis',lat:51.8908,lng:4.3058,gla:7200,built:2009,height:8.5,docks:10,lastTxDate:'2017-09',lastTxPrice:7.1,owner:'Private (Rooijakkers GmbH)',ownerType:'Private',wault:3.0,vacancy:15,yield:null,estValue:9.5,commentary:'High vacancy (15%) in a private-owned asset last traded in 2017. Below-spec clear height and small size limit institutional appeal. Port adjacency provides land value optionality.',tags:['High vacancy','Private','Repositioning']},
+  {id:'mv12',zone:'maasvlakte',name:'Maasvlakte Cold Chain Hub',address:'Australiehaven 22, Maasvlakte',lat:51.9622,lng:3.9852,gla:17800,built:2017,height:14.5,docks:20,lastTxDate:'2021-07',lastTxPrice:38.2,owner:'Lineage Logistics',ownerType:'Institutional',wault:8.6,vacancy:0,yield:4.3,estValue:46.0,commentary:'Second Lineage cold chain facility in the cluster. Twin assets make this a hard portfolio to displace. Long WAULT, specialist operator with high relocation cost.',tags:['Cold storage','Specialist','Operator sticky']},
+  {id:'mv13',zone:'maasvlakte',name:'Europoort Gateway II',address:'Coloradoweg 18, Maasvlakte',lat:51.9648,lng:3.9778,gla:38500,built:2021,height:13.0,docks:50,lastTxDate:'2022-04',lastTxPrice:68.0,owner:'Prologis',ownerType:'REIT',wault:7.2,vacancy:0,yield:4.0,estValue:80.0,commentary:'Prologis spec development completed 2021, let on long lease. Strong WAULT and full occupancy. Prologis rarely trades operational assets in port clusters.',tags:['Grade A','Prologis','New-build']},
+  {id:'mv14',zone:'maasvlakte',name:'Maasvlakte Bulk Store A',address:'Mississippihaven 50, Maasvlakte',lat:51.9488,lng:4.0188,gla:9400,built:2005,height:8.0,docks:12,lastTxDate:'2009-03',lastTxPrice:7.6,owner:'Private (Bakker Opslag BV)',ownerType:'Private',wault:2.5,vacancy:0,yield:6.4,estValue:11.0,commentary:'Long-held private asset not traded since 2009. Wide yield of 6.4%. Below-spec clear height limits re-letting. WAULT shortening — lease renewal approaching. Classic off-market opportunity.',tags:['Long hold','Off-market','WAULT risk']},
+  {id:'mv15',zone:'maasvlakte',name:'Rotterdam South DC',address:'Hartelweg 44, Europoort',lat:51.8978,lng:4.2718,gla:25600,built:2012,height:10.5,docks:32,lastTxDate:'2020-08',lastTxPrice:34.5,owner:'Cromwell Property Group',ownerType:'Institutional',wault:4.8,vacancy:5,yield:4.9,estValue:42.0,commentary:'Cromwell mid-vintage acquisition with mild vacancy. Cromwell has been active in European logistics recycling — disposal watch as fund approaches end of life.',tags:['Core-plus','Institutional','Fund lifecycle watch']},
+  {id:'mv16',zone:'maasvlakte',name:'Pernis Light Industrial',address:'Vondelingenweg 450, Pernis',lat:51.8938,lng:4.3128,gla:6800,built:2001,height:7.0,docks:8,lastTxDate:'2007-11',lastTxPrice:4.9,owner:'Private (Pietersen BV)',ownerType:'Private',wault:3.3,vacancy:20,yield:null,estValue:8.0,commentary:'Oldest and most distressed in Pernis. High vacancy, below-spec, 17-year private hold. Land value arguably exceeds building value. Redevelopment most likely value outcome.',tags:['Distressed','Older vintage','Redevelopment']},
+
+  // ── VENLO ── (Tradeport Noord/Oost industrial zones, east of city)
+  {id:'vn01',zone:'venlo',name:'Venlo Logistics Park A',address:'Kazerneplein 20, Venlo',lat:51.3848,lng:6.1688,gla:58200,built:2017,height:12.5,docks:74,lastTxDate:'2020-11',lastTxPrice:82.5,owner:'CBRE Investment Management',ownerType:'Institutional',wault:6.8,vacancy:0,yield:4.2,estValue:96.0,commentary:'Large-format Grade A distribution centre at the heart of Venlo. Full occupancy, strong WAULT. Venlo\'s tri-border position (NL/DE/BE) underpins long-term demand. Benchmarkable core asset for any European logistics fund.',tags:['Grade A','Core','Tri-border location']},
+  {id:'vn02',zone:'venlo',name:'Tradeport Noord DC',address:'Tradeportweg 8, Venlo',lat:51.3818,lng:6.1742,gla:37800,built:2013,height:11.0,docks:48,lastTxDate:'2018-03',lastTxPrice:43.2,owner:'W.P. Carey',ownerType:'REIT',wault:4.4,vacancy:0,yield:4.9,estValue:56.0,commentary:'W.P. Carey sale-leaseback vehicle. WAULT shortening creates near-term re-pricing event. W.P. Carey has historically recycled sale-leaseback assets — worth monitoring for disposal.',tags:['Sale-leaseback','REIT','Re-pricing watch']},
+  {id:'vn03',zone:'venlo',name:'Greenport Venlo Hub',address:'Grootestraat 100, Venlo',lat:51.3878,lng:6.1628,gla:24600,built:2021,height:13.5,docks:32,lastTxDate:'2022-06',lastTxPrice:48.1,owner:'Nuveen Real Estate',ownerType:'Institutional',wault:9.2,vacancy:0,yield:3.7,estValue:55.0,commentary:'New-build Grade A acquired on forward commitment. Long WAULT, strong spec. Nuveen is a long-term holder — unlikely to dispose. Useful benchmark for yield calibration in the Venlo market.',tags:['Grade A','New-build','Long WAULT']},
+  {id:'vn04',zone:'venlo',name:'Sevenum Distribution Centre',address:'Businesspark Witveldweg 20, Sevenum',lat:51.4108,lng:6.0388,gla:44100,built:2010,height:10.0,docks:52,lastTxDate:'2015-08',lastTxPrice:38.6,owner:'Private (Janssen Logistics BV)',ownerType:'Private',wault:5.1,vacancy:0,yield:5.6,estValue:54.0,commentary:'Privately-held, no transaction since 2015. Yield of 5.6% implies significant under-rented position given market compression. Strong off-market candidate: private owner may not be benchmarking to current market.',tags:['Off-market candidate','Private','Value gap']},
+  {id:'vn05',zone:'venlo',name:'Amazon Fulfilment Venlo',address:'Venrayseweg 190, Venlo',lat:51.3762,lng:6.1858,gla:132000,built:2019,height:24.0,docks:180,lastTxDate:'2019-12',lastTxPrice:280.0,owner:'Prologis',ownerType:'REIT',wault:6.0,vacancy:0,yield:3.6,estValue:340.0,commentary:'Mega-box fulfilment centre anchored by Amazon on a long lease. Clear height of 24m enables full robotics stack. At ~€340m estimated value, the largest single asset in Venlo submarket. Included for market benchmarking only.',tags:['Mega-box','Single-tenant','Trophy']},
+  {id:'vn06',zone:'venlo',name:'Venlo Gateway Park B',address:'Kazerneplein 44, Venlo',lat:51.3808,lng:6.1798,gla:18400,built:2007,height:8.5,docks:22,lastTxDate:'2023-10',lastTxPrice:24.7,owner:'Montea NV',ownerType:'REIT',wault:3.2,vacancy:0,yield:5.1,estValue:26.0,commentary:'Older-spec asset recently traded by Montea reflecting their value-add strategy. Below-market clear height is a capex risk on next re-letting. WAULT at 3.2 years creates near-term optionality.',tags:['Value-add','REIT','Spec upgrade needed']},
+  {id:'vn07',zone:'venlo',name:'Venlo Urban Logistics',address:'Nijmeegseweg 21, Venlo',lat:51.3728,lng:6.1668,gla:7800,built:2022,height:10.0,docks:12,lastTxDate:'2022-11',lastTxPrice:15.6,owner:'Urban Logistics REIT',ownerType:'REIT',wault:7.5,vacancy:0,yield:4.4,estValue:18.0,commentary:'Last-mile urban logistics — fastest-growing sub-sector. Strong rental growth prospects given land scarcity near urban centres.',tags:['Last-mile','Growth sub-sector','REIT']},
+  {id:'vn08',zone:'venlo',name:'LG Tradeport Venlo',address:'Tradeportweg 22, Venlo',lat:51.3858,lng:6.1728,gla:29300,built:2015,height:11.5,docks:36,lastTxDate:'2021-04',lastTxPrice:42.8,owner:'AXA IM Real Assets',ownerType:'Institutional',wault:5.3,vacancy:0,yield:4.5,estValue:52.0,commentary:'AXA IM core logistics hold — steady income profile, full occupancy. Monitor for fund-level disposal activity.',tags:['Core','Institutional','Steady income']},
+  {id:'vn09',zone:'venlo',name:'Rijnpoort Warehouse Cluster',address:'Rijnpoortweg 15, Venlo',lat:51.3898,lng:6.1598,gla:16200,built:2004,height:7.0,docks:18,lastTxDate:'2010-06',lastTxPrice:10.4,owner:'Private (Hermans & Zn)',ownerType:'Private',wault:2.8,vacancy:20,yield:null,estValue:14.0,commentary:'Highest vacancy in this zone at 20%. Last traded in 2010. Below-spec clear height (7m) limits modern occupier appeal. Land value likely exceeds building value. Redevelopment is the primary value-creation path.',tags:['High vacancy','Older vintage','Redevelopment']},
+  {id:'vn10',zone:'venlo',name:'Witte de With Logistics',address:'Witte de Withstraat 8, Venlo',lat:51.3748,lng:6.1728,gla:12500,built:2012,height:10.0,docks:16,lastTxDate:'2019-09',lastTxPrice:16.8,owner:'Private (Volker BV)',ownerType:'Private',wault:4.6,vacancy:0,yield:5.4,estValue:20.0,commentary:'Small private-held asset. Wide yield suggests below-market rent. Possible bolt-on for a buyer seeking to build a Venlo cluster.',tags:['Private','Bolt-on potential','Under-rented']},
+  {id:'vn11',zone:'venlo',name:'Venlonaar Business Park DC',address:'Venlonaarseweg 30, Venlo',lat:51.3928,lng:6.1648,gla:21800,built:2009,height:9.5,docks:26,lastTxDate:'2014-05',lastTxPrice:20.1,owner:'Private (Martens Holding)',ownerType:'Private',wault:3.8,vacancy:5,yield:5.8,estValue:27.0,commentary:'Long private hold (10+ years). Yield of 5.8% is wide — significant value gap versus institutional pricing. Prime target for off-market dialogue.',tags:['Long hold','Off-market target','Wide yield']},
+  {id:'vn12',zone:'venlo',name:'Venlo Cross-Border DC',address:'Rijksweg Noord 50, Venlo',lat:51.3918,lng:6.1758,gla:47300,built:2016,height:12.0,docks:60,lastTxDate:'2021-09',lastTxPrice:67.4,owner:'Patrizia AG',ownerType:'Institutional',wault:5.8,vacancy:0,yield:4.4,estValue:80.0,commentary:'Patrizia pan-European logistics fund. Strong cross-border operator tenant base. WAULT at 5.8 years — renewal approaching 2027. Monitor for Patrizia recycling activity.',tags:['Core','Cross-border','Institutional']},
+  {id:'vn13',zone:'venlo',name:'Tegelen Industrial Park',address:'Industrieweg 8, Tegelen',lat:51.3468,lng:6.1428,gla:19500,built:2003,height:8.5,docks:24,lastTxDate:'2013-04',lastTxPrice:15.2,owner:'Private (Notten Vastgoed)',ownerType:'Private',wault:4.2,vacancy:8,yield:5.9,estValue:22.0,commentary:'10-year private hold in Tegelen. Modest vacancy, below-spec clear height. Market yield compression since 2013 has created a material value gap. Good off-market candidate.',tags:['Private','Value gap','Off-market']},
+  {id:'vn14',zone:'venlo',name:'Blerick Logistics Estate',address:'Insulindestraat 20, Blerick',lat:51.3688,lng:6.1298,gla:14100,built:2008,height:9.0,docks:16,lastTxDate:'2018-06',lastTxPrice:17.1,owner:'Private (Blerick Invest BV)',ownerType:'Private',wault:3.6,vacancy:0,yield:5.5,estValue:21.0,commentary:'Blerick is Venlo\'s western logistics suburb with good A73 access. Clean occupancy, wide yield. Bolt-on acquisition candidate for a buyer already active in Venlo.',tags:['Private','Bolt-on','Secondary location']},
+  {id:'vn15',zone:'venlo',name:'Venlo Intermodal Freight Hub',address:'Australielaan 10, Venlo',lat:51.3778,lng:6.1918,gla:61200,built:2020,height:13.5,docks:78,lastTxDate:'2022-01',lastTxPrice:96.5,owner:'GLP Europe',ownerType:'Institutional',wault:8.1,vacancy:0,yield:3.9,estValue:112.0,commentary:'Large-format intermodal DC — rail and road access. GLP development sold on forward commitment. Strong ESG credentials given multimodal access. Monitor fund cycle for disposal timing.',tags:['Grade A','Intermodal','ESG-positive']},
+  {id:'vn16',zone:'venlo',name:'Horst aan de Maas DC',address:'Businesspark Witveldweg 48, Horst',lat:51.4518,lng:6.0448,gla:33800,built:2014,height:11.0,docks:42,lastTxDate:'2019-11',lastTxPrice:42.1,owner:'Montea NV',ownerType:'REIT',wault:4.0,vacancy:0,yield:4.8,estValue:54.0,commentary:'Horst aan de Maas — northern Venlo corridor with agri-logistics tenant base. WAULT at 4 years — renewal decision approaching. Montea may seek to exit as part of portfolio optimisation.',tags:['REIT','Agri-logistics','Renewal watch']},
+  {id:'vn17',zone:'venlo',name:'Arcen Riverside Warehouse',address:'Napoleonsweg 5, Arcen',lat:51.4848,lng:6.1858,gla:8700,built:1998,height:6.5,docks:10,lastTxDate:'2006-02',lastTxPrice:4.8,owner:'Private (Smeets Familie BV)',ownerType:'Private',wault:2.1,vacancy:25,yield:null,estValue:7.5,commentary:'Oldest asset in the Venlo zone. High vacancy at 25%, below-spec in every dimension. Family-owned. Land value may be the primary thesis.',tags:['Distressed','Family owned','High vacancy']},
+  {id:'vn18',zone:'venlo',name:'Venlo South Trade DC',address:'Tradeportweg 36, Venlo',lat:51.3698,lng:6.1788,gla:22400,built:2011,height:10.5,docks:28,lastTxDate:'2016-07',lastTxPrice:26.8,owner:'Private (Hermens Logistics BV)',ownerType:'Private',wault:5.2,vacancy:0,yield:5.3,estValue:33.0,commentary:'7-year private hold with clean occupancy. Wide yield vs market. At €33m, firmly within reach for a value-add fund.',tags:['Private','Off-market','Under-rented']},
+
+  // ── SCHIPHOL ── (Haarlemmermeer polder industrial zones — all dry land)
+  {id:'sc01',zone:'schiphol',name:'Schiphol Cargo Centre I',address:'Schiphol Boulevard 127, Schiphol',lat:52.3148,lng:4.7618,gla:31400,built:2016,height:11.5,docks:38,lastTxDate:'2020-07',lastTxPrice:62.8,owner:'Segro PLC',ownerType:'REIT',wault:7.1,vacancy:0,yield:3.8,estValue:78.0,commentary:'Segro\'s flagship Schiphol asset — air cargo adjacent, full occupancy, long WAULT. Benchmark pricing: sub-4% NIY for prime airport-adjacent logistics.',tags:['Air cargo','Grade A','Trophy']},
+  {id:'sc02',zone:'schiphol',name:'Amsterdam Air Logistics Hub',address:'Evert van de Beekstraat 310, Schiphol',lat:52.3188,lng:4.7678,gla:22700,built:2012,height:10.5,docks:28,lastTxDate:'2018-11',lastTxPrice:38.4,owner:'Bouwinvest REIM',ownerType:'Institutional',wault:5.2,vacancy:0,yield:4.3,estValue:49.0,commentary:'Bouwinvest Dutch pension fund vehicle — long-term core hold. Airport-adjacent with strong covenant tenants. Dutch pension funds rarely dispose voluntarily.',tags:['Pension fund','Core','Airport-adjacent']},
+  {id:'sc03',zone:'schiphol',name:'Haarlemmermeer Freight DC',address:'Hoofddorpplein 12, Hoofddorp',lat:52.3028,lng:4.6958,gla:44500,built:2019,height:13.0,docks:58,lastTxDate:'2021-03',lastTxPrice:84.2,owner:'Hines',ownerType:'Institutional',wault:6.5,vacancy:0,yield:3.9,estValue:98.0,commentary:'Hines development near Schiphol. At ~€98m current estimated value within range for a mid-size European logistics fund. Monitor for mandate end as a potential disposal catalyst.',tags:['Grade A','Core','Fund recycling watch']},
+  {id:'sc04',zone:'schiphol',name:'Aalsmeer Flower Logistics',address:'Legmeerdijk 313, Aalsmeer',lat:52.2728,lng:4.7518,gla:18900,built:2008,height:8.0,docks:20,lastTxDate:'2016-02',lastTxPrice:21.3,owner:'Private (FloraHolland BV)',ownerType:'Owner-Occupier',wault:null,vacancy:0,yield:null,estValue:28.0,commentary:'Specialist floriculture logistics adjacent to world\'s largest flower auction. Sale-and-leaseback potential given FloraHolland\'s capital allocation priorities. Sector expertise required.',tags:['Sale-leaseback candidate','Specialist','Niche sector']},
+  {id:'sc05',zone:'schiphol',name:'Schiphol East Cargo B',address:'Papaverweg 40, Amsterdam',lat:52.3248,lng:4.8088,gla:12400,built:2020,height:12.0,docks:16,lastTxDate:'2023-04',lastTxPrice:28.5,owner:'Private (AMS Cargo Ventures)',ownerType:'Private',wault:5.8,vacancy:0,yield:4.6,estValue:30.0,commentary:'Recently traded private-held cargo facility. Full occupancy, good spec. Potential early disposal if yield arbitrage vs. institutional buyer is realised.',tags:['Recent transaction','Private','Yield arbitrage']},
+  {id:'sc06',zone:'schiphol',name:'Badhoevedorp Multi-Let',address:'Sloterweg 829, Badhoevedorp',lat:52.3368,lng:4.7808,gla:9800,built:2005,height:7.5,docks:14,lastTxDate:'2014-09',lastTxPrice:9.2,owner:'Private (Willemsen Vastgoed)',ownerType:'Private',wault:2.1,vacancy:10,yield:6.1,estValue:13.0,commentary:'Multi-let estate near Schiphol with short WAULT and partial vacancy. Long private hold since 2014. Asset management upside: vacancy lease-up and rent review could compress yield significantly.',tags:['Multi-let','Value-add','Long hold']},
+  {id:'sc07',zone:'schiphol',name:'Schiphol Pharma Hub',address:'Bergingsweg 15, Schiphol Oost',lat:52.3108,lng:4.7968,gla:8600,built:2018,height:10.0,docks:10,lastTxDate:'2022-01',lastTxPrice:22.4,owner:'Cromwell Property Group',ownerType:'Institutional',wault:8.2,vacancy:0,yield:4.1,estValue:25.0,commentary:'GDP-compliant pharmaceutical logistics with strong structural tailwinds. Long WAULT anchored by pharma tenant. Cromwell active in European logistics — potential disposal as part of portfolio optimisation.',tags:['Pharma','Specialist','GDP-compliant']},
+  {id:'sc08',zone:'schiphol',name:'Nieuw-Vennep Cross-Dock',address:'Hoofdweg 42, Nieuw-Vennep',lat:52.2578,lng:4.6368,gla:15300,built:2011,height:9.0,docks:30,lastTxDate:'2017-08',lastTxPrice:18.1,owner:'Private (NDC Group)',ownerType:'Private',wault:3.5,vacancy:0,yield:5.5,estValue:23.0,commentary:'Cross-dock near Schiphol — private holder since 2017. Lease renewal decision approaching. Monitor for disposal post-renewal.',tags:['Cross-dock','Private','3PL tenant']},
+  {id:'sc09',zone:'schiphol',name:'Fokker Logistics Estate',address:'Fokkerweg 300, Schiphol Oost',lat:52.3068,lng:4.8028,gla:26800,built:2001,height:8.0,docks:32,lastTxDate:'2008-04',lastTxPrice:19.5,owner:'Private (Fokker Estate BV)',ownerType:'Private',wault:4.0,vacancy:18,yield:null,estValue:32.0,commentary:'Oldest, most distressed asset in this zone — last traded in 2008. High vacancy, private ownership. Land value likely exceeds building value. Redevelopment play for a well-capitalised buyer with planning expertise.',tags:['Distressed','Redevelopment','Long hold']},
+  {id:'sc10',zone:'schiphol',name:'Amsterdam West Cargo',address:'Lijnden Businesspark 20, Lijnden',lat:52.3548,lng:4.7568,gla:27300,built:2015,height:11.0,docks:34,lastTxDate:'2020-03',lastTxPrice:46.2,owner:'AEW Europe',ownerType:'Institutional',wault:5.4,vacancy:0,yield:4.4,estValue:57.0,commentary:'AEW mid-ring logistics asset serving Amsterdam West. Strong occupancy, good WAULT. AEW actively recycles in European logistics — monitor for disposal as fund matures.',tags:['Core','Amsterdam ring','Institutional']},
+  {id:'sc11',zone:'schiphol',name:'Schiphol-Rijk Logistics Park',address:'Schiphol-Rijk Businesspark 14, Haarlemmermeer',lat:52.2928,lng:4.7468,gla:18600,built:2013,height:10.5,docks:22,lastTxDate:'2017-10',lastTxPrice:28.4,owner:'Private (Haarlemmermeer Vastgoed BV)',ownerType:'Private',wault:3.8,vacancy:10,yield:5.8,estValue:32.0,commentary:'Private-held in Schiphol-Rijk — premium airport-adjacent location. Wide yield (5.8%) implies significant discount to realisable value. Strong off-market acquisition case.',tags:['Private','Value gap','Airport-adjacent']},
+  {id:'sc12',zone:'schiphol',name:'Kudelstaart Cold Store',address:'Lakenblekerstraat 8, Kudelstaart',lat:52.2468,lng:4.7588,gla:11200,built:2010,height:12.0,docks:14,lastTxDate:'2019-05',lastTxPrice:22.1,owner:'Private (Koude Keten NL)',ownerType:'Owner-Occupier',wault:null,vacancy:0,yield:null,estValue:28.0,commentary:'Owner-occupier cold store south of Schiphol. Sale-and-leaseback potential — cold chain operators increasingly look to release capital. Niche buyer pool but scarcity premium applies.',tags:['Cold storage','Owner-occupier','Sale-leaseback candidate']},
+  {id:'sc13',zone:'schiphol',name:'Rozenburg Last-Mile Hub',address:'Rijksstraatweg 25, Halfweg',lat:52.3688,lng:4.7368,gla:6200,built:2020,height:9.5,docks:10,lastTxDate:'2021-03',lastTxPrice:13.8,owner:'Urban Logistics REIT',ownerType:'REIT',wault:6.2,vacancy:0,yield:4.3,estValue:16.0,commentary:'Last-mile parcel hub near Amsterdam. Urban Logistics REIT dominant buyer in this sub-sector. Small lot but strategic for e-commerce last-mile demand growth.',tags:['Last-mile','REIT','E-commerce']},
+  {id:'sc14',zone:'schiphol',name:'Hoofddorp Business DC',address:'Taurusavenue 20, Hoofddorp',lat:52.2848,lng:4.6728,gla:35200,built:2018,height:12.5,docks:44,lastTxDate:'2022-06',lastTxPrice:62.4,owner:'Segro PLC',ownerType:'REIT',wault:6.8,vacancy:0,yield:4.1,estValue:76.0,commentary:'Segro Hoofddorp acquisition — Grade A spec, full occupancy, long WAULT. Hoofddorp is tier-1 logistics in Haarlemmermeer. Core Segro hold.',tags:['Grade A','Core','REIT']},
+  {id:'sc15',zone:'schiphol',name:'Aalsmeer Trade Centre DC',address:'Legmeerdijk 250, Aalsmeer',lat:52.2648,lng:4.7388,gla:16800,built:2007,height:9.0,docks:20,lastTxDate:'2015-09',lastTxPrice:19.5,owner:'Private (Aalsmeer Logistics BV)',ownerType:'Private',wault:4.5,vacancy:0,yield:5.6,estValue:24.0,commentary:'8-year private hold, clean occupancy, FloraHolland adjacency provides tenant stickiness. Wide yield at 5.6%. Straightforward off-market outreach target at €24m.',tags:['Private','FloraHolland adjacency','Off-market']},
+
+  // ── TILBURG ── (Vossenberg, Loven, Kraaiven industrial zones — all solid land)
+  {id:'tb01',zone:'tilburg',name:'Tilburg Logistics Centre I',address:'Vossenberg 22, Tilburg',lat:51.5658,lng:5.0488,gla:48600,built:2018,height:12.5,docks:62,lastTxDate:'2021-08',lastTxPrice:71.4,owner:'Mileway',ownerType:'Institutional',wault:5.4,vacancy:0,yield:4.3,estValue:85.0,commentary:'Mileway (Blackstone\'s last-mile platform) core hold. Strong Brabant logistics location on the E313/A58 corridor. Monitor for Blackstone exit at fund level.',tags:['Core','Blackstone platform','Mid-corridor']},
+  {id:'tb02',zone:'tilburg',name:'Waalwijk Gateway DC',address:'Haven 3012, Waalwijk',lat:51.6788,lng:5.0638,gla:36200,built:2014,height:11.5,docks:44,lastTxDate:'2019-05',lastTxPrice:47.8,owner:'Patrizia AG',ownerType:'Institutional',wault:4.8,vacancy:0,yield:4.7,estValue:58.0,commentary:'Patrizia German institutional fund. Waalwijk is a well-established shoe and distribution hub. WAULT declining — lease renewal or disposal decision ahead.',tags:['Core','Institutional','Lease renewal watch']},
+  {id:'tb03',zone:'tilburg',name:'Gilze-Rijen Air Cargo',address:'Industrieweg 20, Gilze',lat:51.5628,lng:4.9488,gla:14200,built:2007,height:8.5,docks:16,lastTxDate:'2015-11',lastTxPrice:13.8,owner:'Private (De Laat Vastgoed)',ownerType:'Private',wault:3.2,vacancy:8,yield:6.0,estValue:17.0,commentary:'Small private asset near Gilze-Rijen airport. Long private hold. Wide yield on occupied income. Candidate for off-market approach.',tags:['Private','Off-market','Niche location']},
+  {id:'tb04',zone:'tilburg',name:'Kaatsheuvel Distribution Hub',address:'Hoogeindse Baan 24, Kaatsheuvel',lat:51.6538,lng:5.0538,gla:29800,built:2020,height:13.0,docks:38,lastTxDate:'2022-03',lastTxPrice:55.2,owner:'DWS Investments',ownerType:'Institutional',wault:8.7,vacancy:0,yield:3.8,estValue:62.0,commentary:'New-build acquired by DWS as part of German pension fund mandate. Long WAULT, prime spec. Long-term hold — DWS unlikely to dispose.',tags:['Grade A','New-build','Long WAULT']},
+  {id:'tb05',zone:'tilburg',name:'Dongen Private Estate',address:'Nassaulaan 8, Dongen',lat:51.6258,lng:4.9388,gla:16500,built:2003,height:7.5,docks:18,lastTxDate:'2012-06',lastTxPrice:12.4,owner:'Private (Dongen Familie Holding)',ownerType:'Private',wault:2.0,vacancy:0,yield:6.3,estValue:19.0,commentary:'Classic family-held estate untouched for 12+ years. Very short WAULT. Wide yield. Possible intergenerational transfer creating disposal motivation. Flag for off-market outreach.',tags:['Family owned','WAULT risk','Off-market']},
+  {id:'tb06',zone:'tilburg',name:'Tilburg Multimodal Terminal',address:'Sluitersweg 2, Tilburg',lat:51.5728,lng:5.0728,gla:52100,built:2016,height:11.5,docks:68,lastTxDate:'2020-09',lastTxPrice:76.3,owner:'GLP Europe',ownerType:'Institutional',wault:5.9,vacancy:0,yield:4.4,estValue:90.0,commentary:'Multimodal terminal access (road + rail) is a premium differentiator. ESG-positive transport modal split appeals to institutional tenants.',tags:['Multimodal','ESG-positive','Core-plus']},
+  {id:'tb07',zone:'tilburg',name:'Berkel-Enschot Small Unit DC',address:'Hoolstraat 12, Berkel-Enschot',lat:51.5558,lng:5.1128,gla:7400,built:2010,height:8.0,docks:10,lastTxDate:'2016-04',lastTxPrice:6.8,owner:'Private (Smits Logistics BV)',ownerType:'Owner-Occupier',wault:null,vacancy:0,yield:null,estValue:10.5,commentary:'Owner-occupier, single-use, small lot. Not a realistic acquisition for a fund of meaningful size. Sale-leaseback potential but operator unlikely to be motivated seller.',tags:['Owner-occupier','Small lot','Sale-leaseback watch']},
+  {id:'tb08',zone:'tilburg',name:'Oss Logistics Park',address:'Rijksweg 10, Oss',lat:51.7638,lng:5.5188,gla:33400,built:2015,height:11.0,docks:42,lastTxDate:'2023-07',lastTxPrice:52.1,owner:'AEW Europe',ownerType:'Institutional',wault:6.3,vacancy:0,yield:4.6,estValue:58.0,commentary:'Recently traded in 2023 by AEW. Secondary Brabant location but strong road connectivity. AEW is an active buyer/seller — potential recycling within fund lifecycle.',tags:['Recent transaction','Institutional','Secondary location']},
+  {id:'tb09',zone:'tilburg',name:'Tilburg North DC',address:'Industrieweg 60, Tilburg',lat:51.5858,lng:5.0618,gla:19700,built:2008,height:9.5,docks:24,lastTxDate:'2020-01',lastTxPrice:26.4,owner:'Private (Tilburg Logistics Invest BV)',ownerType:'Private',wault:3.6,vacancy:5,yield:5.7,estValue:31.0,commentary:'Private acquisition in 2020 with vacancy now down to 5% from 15% — asset management progress visible. Private owner may look to exit having created value.',tags:['Value-add progress','Private','Improving profile']},
+  {id:'tb10',zone:'tilburg',name:'Tilburg Fashion Logistics',address:'Textielweg 12, Tilburg',lat:51.5608,lng:5.0558,gla:42300,built:2016,height:12.0,docks:54,lastTxDate:'2021-02',lastTxPrice:60.8,owner:'CBRE Investment Management',ownerType:'Institutional',wault:6.1,vacancy:0,yield:4.3,estValue:73.0,commentary:'Fashion and e-commerce fulfilment anchor — Tilburg is a key European fashion logistics hub. CBRE IM long-term hold. Tenant likely to renew given logistics infrastructure investment.',tags:['Fashion logistics','Core','E-commerce']},
+  {id:'tb11',zone:'tilburg',name:'Waalwijk Riverside DC',address:'Edisonstraat 8, Waalwijk',lat:51.6838,lng:5.0728,gla:28100,built:2012,height:11.0,docks:36,lastTxDate:'2018-09',lastTxPrice:35.4,owner:'Private (Waalwijk Industrial BV)',ownerType:'Private',wault:3.9,vacancy:0,yield:5.5,estValue:43.0,commentary:'Private hold since 2018. Wide yield. Waalwijk has repriced since acquisition — current €43m vs €35m cost implies 21% unrealised gain. Strong off-market case.',tags:['Private','Unrealised gain','Off-market']},
+  {id:'tb12',zone:'tilburg',name:'Tilburg East Industrial Park',address:'Lage Witsiebaan 6, Tilburg',lat:51.5548,lng:5.1038,gla:15600,built:2006,height:8.5,docks:18,lastTxDate:'2014-03',lastTxPrice:14.2,owner:'Private (Claassen Holding)',ownerType:'Private',wault:2.8,vacancy:5,yield:6.1,estValue:18.5,commentary:'9-year private hold with modest vacancy and short WAULT. Wide yield suggests owner anchored to historical pricing. Possible value-add play for an active asset manager.',tags:['Value-add','Private','Short WAULT']},
+  {id:'tb13',zone:'tilburg',name:'Drunen Distribution Centre',address:'Groenewoudsedijk 15, Drunen',lat:51.6858,lng:5.1348,gla:31500,built:2019,height:12.5,docks:40,lastTxDate:'2021-11',lastTxPrice:51.2,owner:'Tritax EuroBox',ownerType:'REIT',wault:7.3,vacancy:0,yield:4.1,estValue:61.0,commentary:'Tritax EuroBox in the Drunen/Waalwijk corridor. New-build Grade A, long WAULT. Tritax has faced capital markets pressure — monitor for disposal.',tags:['Grade A','REIT','Balance sheet watch']},
+  {id:'tb14',zone:'tilburg',name:'Heusden Logistics Estate',address:'Lage Zijde 30, Heusden',lat:51.7218,lng:5.1388,gla:23800,built:2009,height:10.0,docks:28,lastTxDate:'2016-05',lastTxPrice:24.6,owner:'Private (Van Rooij Vastgoed)',ownerType:'Private',wault:4.1,vacancy:0,yield:5.7,estValue:30.0,commentary:'7-year private hold, clean profile. Heusden secondary Brabant location but strong A59 connectivity. Wide yield vs market implies value gap.',tags:['Private','Secondary location','Value gap']},
+  {id:'tb15',zone:'tilburg',name:'Tilburg Intermodal Freight DC',address:'Vossendaal 10, Tilburg',lat:51.5698,lng:5.0818,gla:56400,built:2022,height:14.0,docks:72,lastTxDate:'2023-03',lastTxPrice:102.0,owner:'Blackstone (BREIT)',ownerType:'Institutional',wault:9.2,vacancy:0,yield:3.8,estValue:114.0,commentary:'Newest and largest asset in the Tilburg zone. Highest clear height (14m). Very long WAULT. Monitor for BREIT redemption pressure as potential disposal catalyst.',tags:['Grade A','Mega-box','Blackstone']},
+  {id:'tb16',zone:'tilburg',name:'Udenhout Rural DC',address:'Industriestraat 4, Udenhout',lat:51.5988,lng:5.1588,gla:7100,built:2004,height:7.5,docks:8,lastTxDate:'2010-09',lastTxPrice:5.2,owner:'Private (Udenhout Opslag BV)',ownerType:'Owner-Occupier',wault:null,vacancy:0,yield:null,estValue:8.5,commentary:'Rural owner-occupier, 13-year private hold. Below institutional lot size and spec. Interesting only as part of a local portfolio aggregation strategy.',tags:['Owner-occupier','Rural','Small lot']},
+
+  // ── ALMERE ── (Almere Poort, Almere Haven, Flevoland polder — all reclaimed farmland, no water risk)
+  {id:'al01',zone:'almere',name:'Almere Logistics Park',address:'Handelsweg 40, Almere',lat:52.3748,lng:5.1948,gla:41200,built:2019,height:12.5,docks:52,lastTxDate:'2021-11',lastTxPrice:64.5,owner:'Tritax EuroBox',ownerType:'REIT',wault:7.2,vacancy:0,yield:4.0,estValue:76.0,commentary:'Tritax EuroBox pan-European logistics hold. Almere benefits from Amsterdam overflow demand. Tritax has faced capital markets pressure — monitor for asset disposal.',tags:['Grade A','REIT','Amsterdam overflow']},
+  {id:'al02',zone:'almere',name:'Flevoland Distribution Hub',address:'Larserdreef 220, Almere',lat:52.3828,lng:5.2148,gla:27800,built:2015,height:11.0,docks:34,lastTxDate:'2019-02',lastTxPrice:38.2,owner:'Bouwinvest REIM',ownerType:'Institutional',wault:5.6,vacancy:0,yield:4.5,estValue:47.0,commentary:'Bouwinvest Dutch pension fund — core logistics. Flevoland market has tightened significantly since 2019. Dutch pension funds are net buyers — disposal unlikely.',tags:['Core','Pension fund','Stable income']},
+  {id:'al03',zone:'almere',name:'Almere Stichtsekant DC',address:'Stichtsekant 30, Almere',lat:52.3688,lng:5.1828,gla:19400,built:2011,height:10.0,docks:24,lastTxDate:'2017-05',lastTxPrice:22.1,owner:'Private (Flevo Vastgoed BV)',ownerType:'Private',wault:4.1,vacancy:0,yield:5.2,estValue:29.0,commentary:'Private hold since 2017. Current estimated value of €29m vs. €22m cost implies meaningful unrealised gain. Private owner may not be aware. Off-market approach could be well-received.',tags:['Private','Off-market value','Unrealised gain']},
+  {id:'al04',zone:'almere',name:'Almere Poort Logistics',address:'Titan 20, Almere Poort',lat:52.3548,lng:5.2088,gla:35600,built:2022,height:13.5,docks:46,lastTxDate:'2023-06',lastTxPrice:68.4,owner:'Nuveen Real Estate',ownerType:'Institutional',wault:9.4,vacancy:0,yield:3.7,estValue:74.0,commentary:'Newest and most modern asset in the Almere zone. Very long WAULT, prime spec. Long-term institutional hold — not a near-term disposal candidate.',tags:['Grade A','New-build','Very long WAULT']},
+  {id:'al05',zone:'almere',name:'Lelystad Air Logistics',address:'Arendweg 8, Lelystad',lat:52.4638,lng:5.5148,gla:11800,built:2014,height:9.0,docks:14,lastTxDate:'2021-09',lastTxPrice:14.2,owner:'Private (Lelystad Cargo BV)',ownerType:'Private',wault:3.8,vacancy:15,yield:null,estValue:16.0,commentary:'Lelystad Airport adjacent — exposed to uncertainty around commercial aviation expansion. High vacancy (15%). Monitor regulatory news: airport approval could dramatically reprice this asset.',tags:['Speculative','Airport optionality','High vacancy']},
+  {id:'al06',zone:'almere',name:'Dronten Agricultural DC',address:'Businessweg 15, Dronten',lat:52.5248,lng:5.7148,gla:23100,built:2009,height:9.5,docks:28,lastTxDate:'2013-08',lastTxPrice:18.6,owner:'Private (Agri-Logistiek NL)',ownerType:'Owner-Occupier',wault:null,vacancy:0,yield:null,estValue:24.0,commentary:'Agricultural cold chain owner-occupier in rural Flevoland. Long private hold (11 years). Sale-and-leaseback potential. Niche buyer pool required.',tags:['Agri-logistics','Sale-leaseback','Rural location']},
+  {id:'al07',zone:'almere',name:'Almere City Logistics Hub',address:'Markerkant 10, Almere',lat:52.3908,lng:5.2028,gla:8200,built:2021,height:10.0,docks:12,lastTxDate:'2021-12',lastTxPrice:17.8,owner:'Urban Logistics REIT',ownerType:'REIT',wault:6.9,vacancy:0,yield:4.2,estValue:20.0,commentary:'Last-mile urban logistics serving Amsterdam metro parcel delivery demand. Strong rental growth prospects. Urban Logistics REIT is the most active buyer in this sub-sector.',tags:['Last-mile','Urban logistics','REIT']},
+  {id:'al08',zone:'almere',name:'Almere Haven Port DC',address:'Havenatstraat 12, Almere Haven',lat:52.3608,lng:5.1988,gla:32800,built:2017,height:12.0,docks:42,lastTxDate:'2021-04',lastTxPrice:50.4,owner:'AXA IM Real Assets',ownerType:'Institutional',wault:6.2,vacancy:0,yield:4.2,estValue:62.0,commentary:'AXA IM core hold in Almere Haven. Strong spec, full occupancy. Monitor for fund recycling activity.',tags:['Core','Port access','Institutional']},
+  {id:'al09',zone:'almere',name:'Almere Buiten Light Industrial',address:'Lageweg 25, Almere Buiten',lat:52.3968,lng:5.2588,gla:11400,built:2008,height:8.5,docks:14,lastTxDate:'2015-06',lastTxPrice:12.8,owner:'Private (Almere Vastgoed BV)',ownerType:'Private',wault:3.2,vacancy:8,yield:5.9,estValue:16.0,commentary:'8-year private hold with modest vacancy. Wide yield at 5.9%. Last-mile re-purposing potential given population density growth.',tags:['Private','Light industrial','Repositioning potential']},
+  {id:'al10',zone:'almere',name:'Zeewolde Agri-DC',address:'Goorsteeg 8, Zeewolde',lat:52.3308,lng:5.5388,gla:27500,built:2011,height:10.0,docks:32,lastTxDate:'2018-02',lastTxPrice:28.6,owner:'Private (Zeewolde Logistics BV)',ownerType:'Private',wault:4.8,vacancy:0,yield:5.4,estValue:36.0,commentary:'Agricultural and food logistics in rural Flevoland. Clean occupancy. Wide yield at 5.4% vs market.',tags:['Agri-logistics','Private','ESG angle']},
+  {id:'al11',zone:'almere',name:'Almere Logistics Campus B',address:'Handelsweg 62, Almere',lat:52.3788,lng:5.2068,gla:48200,built:2023,height:14.0,docks:62,lastTxDate:'2024-01',lastTxPrice:92.0,owner:'Prologis',ownerType:'REIT',wault:10.0,vacancy:0,yield:3.6,estValue:100.0,commentary:'Newest asset in Almere zone — Prologis development completed 2023. Highest clear height (14m). 10-year WAULT from new anchor tenant. Pure benchmarking asset.',tags:['Grade A','New-build','Very long WAULT']},
+  {id:'al12',zone:'almere',name:'Swifterbant Bulk Warehouse',address:'Industrieweg 30, Swifterbant',lat:52.5748,lng:5.5988,gla:18200,built:2005,height:8.0,docks:20,lastTxDate:'2012-11',lastTxPrice:13.4,owner:'Private (Flevoland Opslag BV)',ownerType:'Private',wault:3.5,vacancy:12,yield:null,estValue:17.0,commentary:'Rural Flevoland, 11-year private hold. Modest vacancy. Interesting for a specialist agri-logistics operator.',tags:['Rural','Long hold','Niche buyer pool']},
+  {id:'al13',zone:'almere',name:'Almere Poort Last-Mile',address:'Titan 38, Almere Poort',lat:52.3488,lng:5.2148,gla:7600,built:2022,height:9.5,docks:12,lastTxDate:'2023-02',lastTxPrice:16.8,owner:'Urban Logistics REIT',ownerType:'REIT',wault:7.0,vacancy:0,yield:4.1,estValue:19.0,commentary:'Urban Logistics REIT last-mile hub adjacent to their existing City Logistics Hub — forming a two-asset subcluster. Strong e-commerce demand from Amsterdam overflow population.',tags:['Last-mile','REIT','Urban logistics']},
+
+  // ── ROOSENDAAL ── (Borchwerf I+II, Moerdijk, Breda industrial parks — all solid land)
+  {id:'ro01',zone:'roosendaal',name:'Roosendaal Gateway DC',address:'Borchwerf II 14, Roosendaal',lat:51.5318,lng:4.4688,gla:45800,built:2017,height:12.5,docks:58,lastTxDate:'2021-06',lastTxPrice:65.2,owner:'Prologis',ownerType:'REIT',wault:6.4,vacancy:0,yield:4.2,estValue:78.0,commentary:'Prologis flagship in the Belgium border corridor. Benefits from proximity to Antwerp and cross-border logistics flows. Core Prologis hold — unlikely to trade.',tags:['Grade A','Border corridor','Core']},
+  {id:'ro02',zone:'roosendaal',name:'Bergen op Zoom Logistics Park',address:'Theodorushaven 20, Bergen op Zoom',lat:51.4888,lng:4.2808,gla:32100,built:2013,height:11.0,docks:40,lastTxDate:'2019-09',lastTxPrice:41.8,owner:'Montea NV',ownerType:'REIT',wault:4.2,vacancy:0,yield:4.8,estValue:52.0,commentary:'Montea Belgian REIT active in the NL/BE border corridor. WAULT declining — disposal or renewal decision ahead.',tags:['REIT','Border logistics','Lease renewal watch']},
+  {id:'ro03',zone:'roosendaal',name:'Moerdijk Industrial Hub',address:'Vlasweg 25, Moerdijk',lat:51.6918,lng:4.5788,gla:38900,built:2016,height:12.0,docks:48,lastTxDate:'2020-04',lastTxPrice:55.4,owner:'Blackstone (BREIT)',ownerType:'Institutional',wault:7.1,vacancy:0,yield:4.1,estValue:68.0,commentary:'Blackstone BREIT vehicle — Moerdijk industrial zone. Specialised tenant mix. Blackstone is the most active recycler in European logistics — monitor for BREIT redemption pressure.',tags:['Blackstone','Specialised zone','Monitor']},
+  {id:'ro04',zone:'roosendaal',name:'Woensdrecht Cross-Dock',address:'Brieltjenspolder 8, Woensdrecht',lat:51.4388,lng:4.3488,gla:13200,built:2005,height:8.0,docks:26,lastTxDate:'2014-03',lastTxPrice:11.5,owner:'Private (Adriaansen Transport BV)',ownerType:'Owner-Occupier',wault:null,vacancy:0,yield:null,estValue:16.0,commentary:'Owner-occupier cross-dock near Woensdrecht air base. Sale-and-leaseback potential if business needs capital. Belgium border proximity as primary value driver.',tags:['Owner-occupier','Cross-dock','Sale-leaseback']},
+  {id:'ro05',zone:'roosendaal',name:'Borchwerf Industrial Estate',address:'Borchwerf I 30, Roosendaal',lat:51.5258,lng:4.4558,gla:21300,built:2004,height:8.5,docks:24,lastTxDate:'2011-07',lastTxPrice:15.8,owner:'Private (Borchwerf Invest BV)',ownerType:'Private',wault:3.1,vacancy:10,yield:5.9,estValue:23.0,commentary:'Long private hold (13 years). Wide yield on occupied income. Roosendaal market has tightened considerably since 2011. Off-market outreach has high probability of finding a willing seller.',tags:['Long hold','Off-market','Value gap']},
+  {id:'ro06',zone:'roosendaal',name:'Breda Logistics Park',address:'Steenakker 14, Breda',lat:51.6108,lng:4.7388,gla:54200,built:2020,height:13.5,docks:70,lastTxDate:'2022-10',lastTxPrice:98.5,owner:'AXA IM Real Assets',ownerType:'Institutional',wault:8.1,vacancy:0,yield:3.9,estValue:110.0,commentary:'Largest asset in this zone. AXA IM core logistics acquisition 2022. Breda is premium on the A16 corridor (Rotterdam–Antwerp). Long WAULT. AXA IM unlikely to dispose before 2028+.',tags:['Grade A','Prime location','Long WAULT']},
+  {id:'ro07',zone:'roosendaal',name:'Etten-Leur Distribution',address:'Vosdonk 20, Etten-Leur',lat:51.5738,lng:4.6308,gla:16800,built:2010,height:9.5,docks:20,lastTxDate:'2018-02',lastTxPrice:19.4,owner:'Private (Van Meel Holding)',ownerType:'Private',wault:4.4,vacancy:0,yield:5.6,estValue:24.0,commentary:'Private hold, clean occupancy, good road access on A58 corridor. Proactive off-market approach at €22–24m range likely well-received.',tags:['Private','Value gap','Off-market candidate']},
+  {id:'ro08',zone:'roosendaal',name:'Roosendaal Rail Terminal DC',address:'Borchwerf II 44, Roosendaal',lat:51.5358,lng:4.4808,gla:29400,built:2019,height:12.0,docks:36,lastTxDate:'2023-11',lastTxPrice:51.8,owner:'GLP Europe',ownerType:'Institutional',wault:7.0,vacancy:0,yield:4.1,estValue:56.0,commentary:'Rail terminal adjacent — multimodal premium in a market increasingly valuing ESG-positive transport. GLP actively manages fund cycles — potential trading asset in medium term.',tags:['Multimodal','Grade A','Rail adjacent']},
+  {id:'ro09',zone:'roosendaal',name:'Roosendaal South Industrial',address:'Borchwerf I 52, Roosendaal',lat:51.5228,lng:4.4488,gla:19800,built:2008,height:9.5,docks:24,lastTxDate:'2016-09',lastTxPrice:20.4,owner:'Private (Roosendaal Industrie BV)',ownerType:'Private',wault:3.4,vacancy:5,yield:5.8,estValue:26.0,commentary:'7-year private hold adjacent to Prologis\'s flagship Roosendaal asset. Wide yield at 5.8%. Modest vacancy. Proactive outreach may find a receptive owner.',tags:['Private','Institutional adjacency','Off-market']},
+  {id:'ro10',zone:'roosendaal',name:'Breda North DC',address:'Minervum 7080, Breda',lat:51.6188,lng:4.7488,gla:36800,built:2018,height:12.5,docks:46,lastTxDate:'2022-04',lastTxPrice:64.2,owner:'CBRE Investment Management',ownerType:'Institutional',wault:6.4,vacancy:0,yield:4.2,estValue:77.0,commentary:'CBRE IM core acquisition in Breda North — strong A16/A27 interchange connectivity. Grade A spec, full occupancy, solid WAULT.',tags:['Grade A','Core','Motorway interchange']},
+  {id:'ro11',zone:'roosendaal',name:'Halderberge Industrial Park',address:'Industrieweg 15, Oudenbosch',lat:51.5908,lng:4.5288,gla:14200,built:2003,height:8.0,docks:16,lastTxDate:'2011-06',lastTxPrice:10.8,owner:'Private (Halderberge Invest BV)',ownerType:'Private',wault:2.6,vacancy:10,yield:6.2,estValue:14.5,commentary:'12-year private hold. High yield at 6.2%, modest vacancy, short WAULT. Below institutional lot size and spec. Potential value-add play for a locally-active buyer.',tags:['Value-add','Secondary location','Short WAULT']},
+  {id:'ro12',zone:'roosendaal',name:'Steenbergen Port DC',address:'Havenweg 22, Steenbergen',lat:51.5888,lng:4.3108,gla:22600,built:2014,height:11.0,docks:28,lastTxDate:'2019-07',lastTxPrice:27.8,owner:'Private (Steenbergen Logistics BV)',ownerType:'Private',wault:4.6,vacancy:0,yield:5.5,estValue:34.0,commentary:'Private hold since 2019. Steenbergen has inland waterway access. Wide yield at 5.5%. Waterway access adds optionality for ESG-focused tenants.',tags:['Private','Waterway access','ESG angle']},
+  {id:'ro13',zone:'roosendaal',name:'Bergen op Zoom North DC',address:'Theodorushaven 44, Bergen op Zoom',lat:51.5048,lng:4.2948,gla:28400,built:2016,height:11.5,docks:36,lastTxDate:'2020-11',lastTxPrice:40.2,owner:'W.P. Carey',ownerType:'REIT',wault:4.8,vacancy:0,yield:4.7,estValue:51.0,commentary:'W.P. Carey sale-leaseback adjacent to their existing Bergen op Zoom asset. WAULT declining across both assets — portfolio-level re-pricing event.',tags:['REIT','Sale-leaseback','Portfolio disposal watch']},
+  {id:'ro14',zone:'roosendaal',name:'Roosendaal E-Commerce DC',address:'Borchwerf II 28, Roosendaal',lat:51.5388,lng:4.4748,gla:43500,built:2021,height:13.0,docks:56,lastTxDate:'2023-05',lastTxPrice:78.5,owner:'Mileway',ownerType:'Institutional',wault:7.6,vacancy:0,yield:4.0,estValue:88.0,commentary:'Mileway (Blackstone) e-commerce focused DC. Strong Grade A spec, long WAULT. Monitor for Blackstone fund-level exit as primary disposal trigger.',tags:['Grade A','E-commerce','Blackstone']},
+  {id:'ro15',zone:'roosendaal',name:'Zevenbergen Distribution Hub',address:'Industriepark de Koekoek 8, Zevenbergen',lat:51.6428,lng:4.6088,gla:17500,built:2010,height:9.5,docks:22,lastTxDate:'2017-03',lastTxPrice:18.9,owner:'Private (Zevenbergen BV)',ownerType:'Private',wault:3.8,vacancy:0,yield:5.6,estValue:23.0,commentary:'6-year private hold. Zevenbergen emerging logistics node on the A16/A17 interchange. Clean occupancy, wide yield at 5.6%. Off-market approach recommended.',tags:['Private','Emerging node','Off-market candidate']}
+
+// STATE
+let map, currentZone=null, selectedId=null, watchlist=[];
+let F={gla:'all',own:'all',tx:'all',zone:'all'};
+const zMarkers={};
+
+function oc(t){return{REIT:'#2A4A8A',Institutional:'#2A6B4A',Private:'#C8692A','Owner-Occupier':'#6B2A8A'}[t]||'#0F2744';}
+function fmtGLA(n){return n>=1000?(n/1000).toFixed(1)+'k':n.toString();}
+
+// INIT
+function init(){
+  map=new mapboxgl.Map({container:'map',style:'mapbox://styles/mapbox/light-v11',center:[5.3,52.2],zoom:7,attributionControl:false});
+  map.addControl(new mapboxgl.NavigationControl({showCompass:false}),'bottom-right');
+  map.on('load',()=>{
+    buildLayers();
+    renderZoneMarkers();
+    renderList();
+  });
+}
+
+// LAYERS — circle markers sized by GLA
+function buildLayers(){
+  // GLA range for sizing: min ~7k, max ~132k. Map to radius 8–28px at zoom 13.
+  const feats=ASSETS.map(a=>({
+    type:'Feature', id:a.id,
+    properties:{id:a.id,zone:a.zone,name:a.name,ownerType:a.ownerType,gla:a.gla,estValue:a.estValue,color:oc(a.ownerType),radius:glaToRadius(a.gla)},
+    geometry:{type:'Point',coordinates:[a.lng,a.lat]}
+  }));
+  map.addSource('wh',{type:'geojson',data:{type:'FeatureCollection',features:feats}});
+
+  // Outer ring (selected state highlight)
+  map.addLayer({id:'wh-sel',type:'circle',source:'wh',layout:{visibility:'none'},paint:{
+    'circle-radius':['interpolate',['linear'],['zoom'],11,['*',['get','radius'],0.6],14,['*',['get','radius'],1.5]],
+    'circle-color':['get','color'],
+    'circle-opacity':['case',['boolean',['feature-state','sel'],false],0.25,0],
+    'circle-stroke-width':['case',['boolean',['feature-state','sel'],false],2.5,0],
+    'circle-stroke-color':['get','color']
+  }});
+
+  // Main circle
+  map.addLayer({id:'wh-circle',type:'circle',source:'wh',layout:{visibility:'none'},paint:{
+    'circle-radius':['interpolate',['linear'],['zoom'],11,['*',['get','radius'],0.5],14,['get','radius']],
+    'circle-color':['get','color'],
+    'circle-opacity':['case',['boolean',['feature-state','sel'],false],1,['boolean',['feature-state','hov'],false],0.9,0.75],
+    'circle-stroke-width':['case',['boolean',['feature-state','sel'],false],2.5,1.5],
+    'circle-stroke-color':'#ffffff',
+    'circle-stroke-opacity':0.9
+  }});
+
+  let hovId=null;
+  const pop=new mapboxgl.Popup({closeButton:false,closeOnClick:false,offset:12});
+  map.on('mousemove','wh-circle',e=>{
+    map.getCanvas().style.cursor='pointer';
+    if(hovId!==null)map.setFeatureState({source:'wh',id:hovId},{hov:false});
+    hovId=e.features[0].id;
+    map.setFeatureState({source:'wh',id:hovId},{hov:true});
+    const p=e.features[0].properties;
+    pop.setLngLat(e.lngLat).setHTML(
+      `<div style="font-family:'DM Sans',sans-serif;min-width:160px">` +
+      `<div style="font-size:12px;font-weight:600;color:#fff;margin-bottom:3px">${p.name}</div>` +
+      `<div style="font-size:11px;color:rgba(255,255,255,0.65)">${fmtGLA(p.gla)} sqm · ${p.ownerType}</div>` +
+      `${p.estValue?`<div style="font-size:11px;color:#C8692A;font-weight:600;margin-top:2px">€${p.estValue}m est.</div>`:''}</div>`
+    ).addTo(map);
+  });
+  map.on('mouseleave','wh-circle',()=>{
+    map.getCanvas().style.cursor='';
+    if(hovId!==null)map.setFeatureState({source:'wh',id:hovId},{hov:false});
+    hovId=null; pop.remove();
+  });
+  map.on('click','wh-circle',e=>{e.preventDefault();openDrawer(e.features[0].properties.id);});
+}
+
+// Map GLA to base radius at zoom 13 (px). Log scale feels right.
+function glaToRadius(gla){
+  const mn=7000,mx=132000,rMin=8,rMax=28;
+  const t=Math.log(Math.max(gla,mn)/mn)/Math.log(mx/mn);
+  return Math.round(rMin+(rMax-rMin)*t);
+}
+
+function showPolys(){
+  map.setLayoutProperty('wh-sel','visibility','visible');
+  map.setLayoutProperty('wh-circle','visibility','visible');
+  filterPolys();
+}
+function hidePolys(){
+  map.setLayoutProperty('wh-sel','visibility','none');
+  map.setLayoutProperty('wh-circle','visibility','none');
+}
+function filterPolys(){
+  const ids=getFiltered().filter(a=>!currentZone||a.zone===currentZone).map(a=>a.id);
+  const f=ids.length?['in',['get','id'],['literal',ids]]:['==','1','2'];
+  map.setFilter('wh-sel',f);
+  map.setFilter('wh-circle',f);
+}
+
+// ZONE MARKERS
+function renderZoneMarkers(){
+  Object.values(zMarkers).forEach(m=>m&&m.remove());
+  Object.keys(zMarkers).forEach(k=>delete zMarkers[k]);
+  const keys=F.zone==='all'?Object.keys(ZONES):[F.zone];
+  keys.forEach(k=>{
+    const z=ZONES[k],cnt=getFiltered().filter(a=>a.zone===k).length;
+    if(!cnt)return;
+    const el=document.createElement('div');
+    el.className='zm';el.style.background=z.color;
+    el.innerHTML=`<span>${z.name}</span><span class="zmc">${cnt}</span>`;
+    el.addEventListener('click',()=>zoomZone(k));
+    zMarkers[k]=new mapboxgl.Marker({element:el,anchor:'center'}).setLngLat(z.center).addTo(map);
+  });
+}
+function clearZMarkers(){Object.values(zMarkers).forEach(m=>m&&m.remove());Object.keys(zMarkers).forEach(k=>delete zMarkers[k]);}
+
+function zoomZone(k){
+  currentZone=k;F.zone=k;
+  clearZMarkers();
+  map.flyTo({center:ZONES[k].center,zoom:ZONES[k].zoom,duration:1300,essential:true});
+  setTimeout(()=>{
+    showPolys();
+    document.getElementById('backBtn').classList.add('on');
+    const cnt=getFiltered().filter(a=>a.zone===k).length;
+    document.getElementById('ibarTxt').textContent=`${ZONES[k].name} · ${cnt} assets · Click a warehouse to open intelligence panel`;
+    document.getElementById('ibar').classList.add('on');
+  },1350);
+  document.querySelectorAll('.zchip').forEach(c=>c.classList.remove('on'));
+  document.querySelectorAll('.zchip').forEach(c=>{if(c.textContent.toLowerCase().startsWith(k.substring(0,4)))c.classList.add('on');});
+  renderList();
+}
+
+function backToOv(){
+  currentZone=null;F.zone='all';selectedId=null;
+  hidePolys();closeDrawer();clearSel();
+  document.getElementById('backBtn').classList.remove('on');
+  document.getElementById('ibar').classList.remove('on');
+  map.flyTo({center:[5.3,52.2],zoom:7,duration:1300,essential:true});
+  setTimeout(()=>renderZoneMarkers(),1350);
+  document.querySelectorAll('.zchip').forEach((c,i)=>{c.classList.toggle('on',i===0);});
+  renderList();
+}
+
+// DRAWER
+function openDrawer(id){
+  const a=ASSETS.find(x=>x.id===id);if(!a)return;
+  clearSel();selectedId=id;
+  map.setFeatureState({source:'wh',id},{sel:true});
+  document.getElementById('dname').textContent=a.name;
+  document.getElementById('daddr').textContent=a.address;
+  const isW=watchlist.includes(id);
+  const btn=document.getElementById('wlBtn');
+  btn.textContent=isW?'★ On Watchlist':'☆ Add to Watchlist';
+  btn.style.background=isW?'#7A3A12':'#C8692A';
+  const yr=a.lastTxDate?parseInt(a.lastTxDate.split('-')[0]):0;
+  const age=new Date().getFullYear()-yr;
+  const tc=age<3?'ts':age<8?'tw':'td';
+  const vc=a.estValue&&a.lastTxPrice?Math.round((a.estValue-a.lastTxPrice)/a.lastTxPrice*100):null;
+  document.getElementById('dbody').innerHTML=`
+    <div class="dsec"><div class="dsl">Key Metrics</div>
+      <div class="mgrid">
+        <div class="mc"><div class="mv">${fmtGLA(a.gla)}</div><div class="ml">GLA (sqm)</div></div>
+        <div class="mc"><div class="mv">${a.estValue?'€'+a.estValue+'m':'N/A'}</div><div class="ml">Est. Value</div></div>
+        <div class="mc"><div class="mv">${a.yield?a.yield+'%':'N/A'}</div><div class="ml">Net Initial Yield</div></div>
+        <div class="mc"><div class="mv">${a.wault?a.wault+' yrs':'N/A'}</div><div class="ml">WAULT</div></div>
+      </div></div>
+    <div class="dsec"><div class="dsl">Asset Specifications</div>
+      <div class="dr"><span class="dk">Year built</span><span class="dv">${a.built}</span></div>
+      <div class="dr"><span class="dk">Clear height</span><span class="dv">${a.height}m</span></div>
+      <div class="dr"><span class="dk">Loading docks</span><span class="dv">${a.docks}</span></div>
+      <div class="dr"><span class="dk">Vacancy</span><span class="dv">${a.vacancy}%</span></div>
+    </div>
+    <div class="dsec"><div class="dsl">Ownership & Transaction</div>
+      <div class="oblock" style="margin-bottom:12px">
+        <div class="oav">${a.owner.substring(0,2).toUpperCase()}</div>
+        <div><div class="oname">${a.owner}</div><div class="otype">${a.ownerType}</div></div>
+      </div>
+      <div class="dr"><span class="dk">Last transaction</span><span class="dv">${a.lastTxDate||'Unknown'}</span></div>
+      <div class="dr"><span class="dk">Last price</span><span class="dv">${a.lastTxPrice?'€'+a.lastTxPrice+'m':'N/A'}</span></div>
+      <div class="dr"><span class="dk">Est. current value</span><span class="dv">${a.estValue?'€'+a.estValue+'m':'N/A'}</span></div>
+      <div class="dr"><span class="dk">Value change</span><span class="dv" style="color:${vc>0?'#1a6b3a':'#7a1a1a'}">${vc!==null?(vc>0?'+':'')+vc+'%':'N/A'}</span></div>
+    </div>
+    <div class="dsec"><div class="dsl">Classification</div>
+      <div class="tags">
+        <span class="tag tn">${a.ownerType}</span>
+        <span class="tag ${tc}">${age>0?age+' yrs since tx':'No tx data'}</span>
+        ${a.tags.map(t=>`<span class="tag ta">${t}</span>`).join('')}
+      </div></div>
+    <div class="dsec">
+      <div class="ailabel"><div class="aidot"></div>Radar Intelligence</div>
+      <div class="ait">${a.commentary}</div>
+    </div>`;
+  document.getElementById('rdrawer').classList.add('on');
+  document.querySelectorAll('.aitem').forEach(el=>el.classList.remove('on'));
+  const li=document.querySelector(`[data-id="${id}"]`);
+  if(li){li.classList.add('on');li.scrollIntoView({block:'nearest',behavior:'smooth'});}
+}
+function clearSel(){if(selectedId)map.setFeatureState({source:'wh',id:selectedId},{sel:false});}
+function closeDrawer(){clearSel();selectedId=null;document.getElementById('rdrawer').classList.remove('on');document.querySelectorAll('.aitem').forEach(el=>el.classList.remove('on'));}
+
+// FILTERS
+function getFiltered(){
+  return ASSETS.filter(a=>{
+    if(F.gla==='small'&&a.gla>=10000)return false;
+    if(F.gla==='mid'&&(a.gla<10000||a.gla>30000))return false;
+    if(F.gla==='large'&&a.gla<=30000)return false;
+    if(F.own!=='all'&&a.ownerType!==F.own)return false;
+    if(F.tx!=='all'){const age=new Date().getFullYear()-(a.lastTxDate?parseInt(a.lastTxDate.split('-')[0]):0);if(F.tx==='recent'&&age>=3)return false;if(F.tx==='mid'&&(age<3||age>8))return false;if(F.tx==='old'&&age<=8)return false;}
+    if(F.zone!=='all'&&a.zone!==F.zone)return false;
+    return true;
+  });
+}
+function setF(k,v,el){
+  F[k]=v;
+  el.closest('[id^="fr-"]').querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  applyF();
+}
+function setZone(v,el){
+  document.querySelectorAll('.zchip').forEach(c=>c.classList.remove('on'));el.classList.add('on');
+  if(v==='all'&&currentZone){backToOv();return;}
+  if(v!=='all'){zoomZone(v);return;}
+  F.zone=v;applyF();
+}
+function applyF(){renderList();updateCnt();if(currentZone)filterPolys();else{hidePolys();renderZoneMarkers();}}
+function updateCnt(){
+  const a=getFiltered();
+  document.getElementById('visCnt').textContent=a.length;
+  document.getElementById('totSqm').textContent=(a.reduce((s,x)=>s+x.gla,0)/1e6).toFixed(1)+'M sqm';
+}
+
+// LIST
+function renderList(){
+  const assets=getFiltered();
+  const disp=currentZone?assets.filter(a=>a.zone===currentZone):assets;
+  const el=document.getElementById('alist');
+  if(!disp.length){el.innerHTML='<div class="empty">No assets match current filters.</div>';updateCnt();return;}
+  el.innerHTML=disp.map(a=>`
+    <div class="aitem${a.id===selectedId?' on':''}" data-id="${a.id}" onclick="clickAsset('${a.id}')">
+      <div class="adot" style="background:${oc(a.ownerType)}"></div>
+      <div class="ainfo">
+        <div class="aname">${a.name}</div>
+        <div class="ameta">${ZONES[a.zone]?.name?.split(' / ')[0]} · ${a.ownerType}</div>
+        <div class="agla">${fmtGLA(a.gla)} sqm${a.estValue?' · €'+a.estValue+'m':''}</div>
+      </div>
+      <div class="aflag" onclick="toggleWL(event,'${a.id}')">${watchlist.includes(a.id)?'★':'☆'}</div>
+    </div>`).join('');
+  updateCnt();
+}
+function clickAsset(id){
+  const a=ASSETS.find(x=>x.id===id);if(!a)return;
+  if(a.zone!==currentZone){zoomZone(a.zone);setTimeout(()=>{openDrawer(id);map.panTo([a.lng,a.lat]);},1450);}
+  else{openDrawer(id);map.panTo([a.lng,a.lat],{duration:600});}
+}
+
+// WATCHLIST
+function toggleWL(e,id){
+  e.stopPropagation();
+  const i=watchlist.indexOf(id);if(i===-1)watchlist.push(id);else watchlist.splice(i,1);
+  updateWLUI();renderList();
+  if(selectedId===id){const isW=watchlist.includes(id);const btn=document.getElementById('wlBtn');btn.textContent=isW?'★ On Watchlist':'☆ Add to Watchlist';btn.style.background=isW?'#7A3A12':'#C8692A';}
+}
+function toggleWLfromDrawer(){if(selectedId)toggleWL({stopPropagation:()=>{}},selectedId);}
+function updateWLUI(){const n=watchlist.length;const el=document.getElementById('wlCount');el.textContent=n;el.classList.toggle('on',n>0);renderWLPanel();}
+function renderWLPanel(){
+  const b=document.getElementById('wlb');
+  if(!watchlist.length){b.innerHTML='<div class="wle">No assets added yet.<br>Click ☆ on any asset to track it.</div>';return;}
+  b.innerHTML=watchlist.map(id=>{const a=ASSETS.find(x=>x.id===id);return`<div class="wli"><div class="wlin"><div class="wlin-n">${a.name}</div><div class="wlin-m">${ZONES[a.zone]?.name} · ${fmtGLA(a.gla)} sqm · ${a.ownerType}</div></div><div class="wlr" onclick="toggleWL({stopPropagation:()=>{}}'${id}')">✕</div></div>`;}).join('');
+}
+function openWL(){renderWLPanel();document.getElementById('wlov').classList.add('on');}
+function closeWL(){document.getElementById('wlov').classList.remove('on');}
+function exportWL(){
+  if(!watchlist.length)return;
+  const h=['Name','Zone','Address','GLA (sqm)','Year Built','Clear Height (m)','Docks','Owner','Owner Type','Last Tx Date','Last Tx Price (€m)','Est Value (€m)','NIY (%)','WAULT (yrs)','Vacancy (%)'];
+  const rows=watchlist.map(id=>{const a=ASSETS.find(x=>x.id===id);return[a.name,ZONES[a.zone]?.name,a.address,a.gla,a.built,a.height,a.docks,a.owner,a.ownerType,a.lastTxDate||'',a.lastTxPrice||'',a.estValue||'',a.yield||'',a.wault||'',a.vacancy];});
+  const csv=[h,...rows].map(r=>r.join(',')).join('\n');
+  const bl=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download='radar-watchlist.csv';a.click();
+}
+
+// MODALS
+function openAlert(){document.getElementById('alertMov').classList.add('on');}
+function closeAlert(){document.getElementById('alertMov').classList.remove('on');}
+function openUpload(){document.getElementById('upMov').classList.add('on');}
+function closeUpload(){document.getElementById('upMov').classList.remove('on');}
+function handleUpload(e){const f=e.target.files[0];if(!f)return;const z=document.querySelector('.uz');z.innerHTML=`<div style="font-size:28px;margin-bottom:8px">✓</div><div style="font-size:13px;color:#1a6b3a;font-weight:500">${f.name} uploaded</div><div style="font-size:11px;color:#aaa;margin-top:4px">Data will be merged with base layer on next render</div>`;}
+function dlTemplate(){const csv='lat,lng,name,address,gla_sqm,built,height_m,docks,owner,owner_type,last_tx_date,last_tx_price_eur_m,vacancy_pct\n51.9621,4.0423,My Warehouse,"Address here",25000,2018,12.5,32,Owner Name,Institutional,2022-06,45.0,0';const bl=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download='radar-upload-template.csv';a.click();}
+
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
