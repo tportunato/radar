@@ -5,158 +5,185 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Radar — Logistics Real Estate Scanner</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-<link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet"/>
-<script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: #0F2744; color: #555555; font-size: 14px; line-height: 1.65; -webkit-font-smoothing: antialiased; overflow: hidden; }
-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; height: 56px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; background: #0F2744; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
-.nav-left { display: flex; align-items: center; gap: 12px; }
-.nav-logo { height: 32px; width: auto; display: block; }
-.nav-sep { width: 1px; height: 20px; background: rgba(255,255,255,0.15); }
-.nav-tool-name { font-size: 14px; font-weight: 600; color: #fff; letter-spacing: -0.01em; }
-.nav-tool-sub { font-size: 11px; color: rgba(255,255,255,0.45); letter-spacing: 0.04em; text-transform: uppercase; }
-.nav-right { display: flex; align-items: center; gap: 16px; }
-.nav-badge { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.5); letter-spacing: 0.1em; text-transform: uppercase; background: rgba(255,255,255,0.07); padding: 4px 10px; border-radius: 20px; border: 0.5px solid rgba(255,255,255,0.12); }
-.nav-btn { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.75); background: rgba(255,255,255,0.07); border: 0.5px solid rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 8px; cursor: pointer; transition: all 0.15s; font-family: 'DM Sans',sans-serif; }
-.nav-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
-.nav-btn.outline { background: transparent; border-color: rgba(255,255,255,0.2); }
-.wl-count { background: #C8692A; color: #fff; font-size: 10px; font-weight: 600; width: 18px; height: 18px; border-radius: 50%; display: none; align-items: center; justify-content: center; }
-.wl-count.on { display: flex; }
-.app-body { position: fixed; top: 56px; left: 0; right: 0; bottom: 0; display: flex; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:#0F2744;color:#555;font-size:14px;line-height:1.65;-webkit-font-smoothing:antialiased;overflow:hidden}
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:56px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;background:#0F2744;border-bottom:0.5px solid rgba(255,255,255,0.1)}
+.nav-left{display:flex;align-items:center;gap:12px}
+.nav-logo{height:32px;width:auto;display:block}
+.nav-sep{width:1px;height:20px;background:rgba(255,255,255,0.15)}
+.nav-tool-name{font-size:14px;font-weight:600;color:#fff;letter-spacing:-0.01em}
+.nav-tool-sub{font-size:11px;color:rgba(255,255,255,0.45);letter-spacing:0.04em;text-transform:uppercase}
+.nav-right{display:flex;align-items:center;gap:16px}
+.nav-badge{font-size:10px;font-weight:600;color:rgba(255,255,255,0.5);letter-spacing:0.1em;text-transform:uppercase;background:rgba(255,255,255,0.07);padding:4px 10px;border-radius:20px;border:0.5px solid rgba(255,255,255,0.12)}
+.nav-btn{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:500;color:rgba(255,255,255,0.75);background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);padding:6px 14px;border-radius:8px;cursor:pointer;transition:all 0.15s;font-family:'DM Sans',sans-serif}
+.nav-btn:hover{background:rgba(255,255,255,0.12);color:#fff}
+.nav-btn.outline{background:transparent;border-color:rgba(255,255,255,0.2)}
+.wl-count{background:#C8692A;color:#fff;font-size:10px;font-weight:600;width:18px;height:18px;border-radius:50%;display:none;align-items:center;justify-content:center}
+.wl-count.on{display:flex}
+/* LAYOUT */
+.app-body{position:fixed;top:56px;left:0;right:0;bottom:0;display:flex}
 /* LEFT PANEL */
-.lp { width: 300px; flex-shrink: 0; background: #fff; border-right: 0.5px solid #E8E5DE; display: flex; flex-direction: column; overflow: hidden; z-index: 100; }
-.lp-head { padding: 16px; border-bottom: 0.5px solid #E8E5DE; flex-shrink: 0; }
-.eyebrow { font-size: 10px; font-weight: 600; color: #aaa; letter-spacing: 0.09em; text-transform: uppercase; margin-bottom: 4px; }
-.lp-title { font-size: 14px; font-weight: 600; color: #0F2744; }
-.res-count { font-size: 11px; color: #888; margin-top: 2px; }
-.res-count span { color: #C8692A; font-weight: 600; }
-.filt { padding: 12px 16px; border-bottom: 0.5px solid #E8E5DE; flex-shrink: 0; }
-.flabel { font-size: 10px; font-weight: 600; color: #aaa; letter-spacing: 0.09em; text-transform: uppercase; margin-bottom: 8px; }
-.frow { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
-.chip { font-size: 11px; font-weight: 500; color: #555; background: #F7F5F1; border: 0.5px solid #E8E5DE; padding: 4px 10px; border-radius: 20px; cursor: pointer; transition: all 0.12s; white-space: nowrap; }
-.chip:hover { border-color: #C8692A; color: #C8692A; }
-.chip.on { background: #FBF0E9; border-color: #C8692A; color: #7A3A12; font-weight: 600; }
-.chip.all.on { background: #0F2744; border-color: #0F2744; color: #fff; }
-.zchip { font-size: 10px; font-weight: 500; color: #555; background: #F7F5F1; border: 0.5px solid #E8E5DE; padding: 3px 8px; border-radius: 20px; cursor: pointer; transition: all 0.12s; }
-.zchip:hover { border-color: #0F2744; color: #0F2744; }
-.zchip.on { background: #E8EDF3; border-color: #0F2744; color: #0F2744; font-weight: 600; }
-.alist { flex: 1; overflow-y: auto; padding: 8px 0; }
-.alist::-webkit-scrollbar { width: 4px; }
-.alist::-webkit-scrollbar-thumb { background: #E8E5DE; border-radius: 2px; }
-.aitem { padding: 10px 16px; cursor: pointer; border-bottom: 0.5px solid #F2F0EC; transition: background 0.1s; display: flex; align-items: flex-start; gap: 10px; }
-.aitem:hover { background: #F7F5F1; }
-.aitem.on { background: #FBF0E9; border-left: 2px solid #C8692A; }
-.adot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
-.ainfo { flex: 1; min-width: 0; }
-.aname { font-size: 13px; font-weight: 500; color: #0F2744; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ameta { font-size: 11px; color: #888; margin-top: 1px; }
-.agla { font-size: 11px; font-weight: 600; color: #C8692A; margin-top: 2px; }
-.aflag { font-size: 14px; color: #E8E5DE; flex-shrink: 0; cursor: pointer; transition: color 0.12s; margin-top: 2px; }
-.aflag:hover { color: #C8692A; }
-.empty { padding: 32px 16px; text-align: center; color: #aaa; font-size: 12px; }
-/* MAP */
-.mwrap { flex: 1; position: relative; }
-#map { width: 100%; height: 100%; }
-.mapboxgl-ctrl-logo { display: none !important; }
+.lp{width:300px;flex-shrink:0;background:#fff;border-right:0.5px solid #E8E5DE;display:flex;flex-direction:column;overflow:hidden;z-index:100}
+.lp-head{padding:16px;border-bottom:0.5px solid #E8E5DE;flex-shrink:0}
+.eyebrow{font-size:10px;font-weight:600;color:#aaa;letter-spacing:0.09em;text-transform:uppercase;margin-bottom:4px}
+.lp-title{font-size:14px;font-weight:600;color:#0F2744}
+.res-count{font-size:11px;color:#888;margin-top:2px}
+.res-count span{color:#C8692A;font-weight:600}
+.filt{padding:12px 16px;overflow-y:auto;min-height:60px}
+.filt::-webkit-scrollbar{width:4px}
+.filt::-webkit-scrollbar-thumb{background:#E8E5DE;border-radius:2px}
+.drag-divider{flex-shrink:0;height:12px;background:#F7F5F1;border-top:0.5px solid #E8E5DE;border-bottom:0.5px solid #E8E5DE;cursor:ns-resize;display:flex;align-items:center;justify-content:center;user-select:none}
+.drag-divider:hover{background:#F0EDE8}
+.drag-handle-bar{width:32px;height:3px;border-radius:2px;background:#D0CCC4}
+.flabel{font-size:10px;font-weight:600;color:#aaa;letter-spacing:0.09em;text-transform:uppercase;margin-bottom:8px}
+.frow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.chip{font-size:11px;font-weight:500;color:#555;background:#F7F5F1;border:0.5px solid #E8E5DE;padding:4px 10px;border-radius:20px;cursor:pointer;transition:all 0.12s;white-space:nowrap}
+.chip:hover{border-color:#C8692A;color:#C8692A}
+.chip.on{background:#FBF0E9;border-color:#C8692A;color:#7A3A12;font-weight:600}
+.chip.all.on{background:#0F2744;border-color:#0F2744;color:#fff}
+.zchip{font-size:10px;font-weight:500;color:#555;background:#F7F5F1;border:0.5px solid #E8E5DE;padding:3px 8px;border-radius:20px;cursor:pointer;transition:all 0.12s}
+.zchip:hover{border-color:#0F2744;color:#0F2744}
+.zchip.on{background:#E8EDF3;border-color:#0F2744;color:#0F2744;font-weight:600}
+.alist{overflow-y:auto;padding:8px 0;min-height:60px}
+.alist::-webkit-scrollbar{width:4px}
+.alist::-webkit-scrollbar-thumb{background:#E8E5DE;border-radius:2px}
+.aitem{padding:10px 16px;cursor:pointer;border-bottom:0.5px solid #F2F0EC;transition:background 0.1s;display:flex;align-items:flex-start;gap:10px}
+.aitem:hover{background:#F7F5F1}
+.aitem.on{background:#FBF0E9;border-left:2px solid #C8692A}
+.adot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.ainfo{flex:1;min-width:0}
+.aname{font-size:13px;font-weight:500;color:#0F2744;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ameta{font-size:11px;color:#888;margin-top:1px}
+.agla{font-size:11px;font-weight:600;color:#C8692A;margin-top:2px}
+.aflag{font-size:14px;color:#E8E5DE;flex-shrink:0;cursor:pointer;transition:color 0.12s;margin-top:2px}
+.aflag:hover{color:#C8692A}
+.empty{padding:32px 16px;text-align:center;color:#aaa;font-size:12px}
+/* DATA NOTE */
+.data-note{padding:12px 16px;border-top:0.5px solid #E8E5DE;flex-shrink:0;background:#F7F5F1}
+.data-note-title{font-size:10px;font-weight:600;color:#aaa;letter-spacing:0.09em;text-transform:uppercase;margin-bottom:6px}
+.data-note-body{font-size:11px;color:#888;line-height:1.6}
+.data-note-prod{margin-top:8px;padding:8px 10px;background:#FBF0E9;border-radius:6px;border-left:2px solid #C8692A}
+.data-note-prod-title{font-size:10px;font-weight:600;color:#7A3A12;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:3px}
+.data-note-prod-body{font-size:11px;color:#7A3A12;line-height:1.55}
+/* RIGHT COLUMN */
+.right-col{flex:1;display:flex;flex-direction:column;min-width:0}
+/* OPPORTUNITY BAR */
+.opp-bar{flex-shrink:0;height:56px;background:#0F2744;border-bottom:0.5px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;gap:8px;padding:0 24px;overflow-x:auto}
+.opp-bar::-webkit-scrollbar{display:none}
+.opp-label{font-size:10px;font-weight:600;color:rgba(255,255,255,0.35);letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap;margin-right:8px;flex-shrink:0}
+.opp-btn{display:flex;align-items:center;gap:0;padding:8px 16px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);transition:all 0.15s;flex-shrink:0;white-space:nowrap}
+.opp-btn:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.25)}
+.opp-btn.active{background:#C8692A;border-color:#C8692A}
+.opp-icon{display:none}
+.opp-name{font-size:12px;font-weight:600;color:#fff;line-height:1.2}
+.opp-desc{font-size:10px;color:rgba(255,255,255,0.45);margin-top:2px}
+
+/* MAP WRAPPER — now inside right-col */
+.mwrap{flex:1;position:relative;min-height:0}
+#map{width:100%;height:100%;background:#f0ede8}
+.leaflet-control-attribution{display:none!important}
 /* Zone marker */
-.zm { background: #0F2744; color: #fff; font-family: 'DM Sans',sans-serif; font-size: 11px; font-weight: 600; padding: 6px 12px; border-radius: 20px; white-space: nowrap; cursor: pointer; box-shadow: 0 2px 8px rgba(15,39,68,0.3); border: 1.5px solid rgba(255,255,255,0.2); display: flex; align-items: center; gap: 6px; transition: all 0.15s; }
-.zm:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
-.zmc { background: rgba(255,255,255,0.2); border-radius: 10px; padding: 1px 6px; font-size: 10px; }
-/* Back btn */
-.back-btn { position: absolute; top: 12px; left: 12px; z-index: 400; display: none; align-items: center; gap: 6px; background: #0F2744; color: #fff; font-family: 'DM Sans',sans-serif; font-size: 12px; font-weight: 500; padding: 7px 14px; border-radius: 8px; border: none; cursor: pointer; box-shadow: 0 2px 8px rgba(15,39,68,0.3); }
-.back-btn:hover { background: #1a3a5c; }
-.back-btn.on { display: flex; }
-/* Info bar */
-.ibar { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 400; display: none; background: #0F2744; color: #fff; font-family: 'DM Sans',sans-serif; font-size: 12px; font-weight: 500; padding: 8px 20px; border-radius: 20px; box-shadow: 0 2px 12px rgba(15,39,68,0.4); align-items: center; gap: 12px; white-space: nowrap; }
-.ibar.on { display: flex; }
-.idot { width: 6px; height: 6px; border-radius: 50%; background: #C8692A; }
+.zm{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;padding:6px 12px;border-radius:20px;white-space:nowrap;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.25);display:flex;align-items:center;gap:6px;transition:all 0.15s}
+.zm:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.3)}
+.zmc{background:rgba(255,255,255,0.3);border-radius:10px;padding:1px 6px;font-size:10px}
+/* Back + info bar */
+.back-btn{position:absolute;top:12px;left:12px;z-index:400;display:none;align-items:center;gap:6px;background:#0F2744;color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:7px 14px;border-radius:8px;border:none;cursor:pointer;box-shadow:0 2px 8px rgba(15,39,68,0.3)}
+.back-btn:hover{background:#1a3a5c}
+.back-btn.on{display:flex}
+.ibar{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);z-index:400;display:none;background:#0F2744;color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:8px 20px;border-radius:20px;box-shadow:0 2px 12px rgba(15,39,68,0.4);align-items:center;gap:12px;white-space:nowrap}
+.ibar.on{display:flex}
+.idot{width:6px;height:6px;border-radius:50%;background:#C8692A}
 /* Legend */
-.legend { position: absolute; bottom: 20px; right: 20px; z-index: 400; background: #fff; border: 0.5px solid #E8E5DE; border-radius: 10px; padding: 12px 14px; font-family: 'DM Sans',sans-serif; }
-.ltitle { font-size: 10px; font-weight: 600; color: #aaa; letter-spacing: 0.09em; text-transform: uppercase; margin-bottom: 8px; }
-.litem { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #555; margin-bottom: 5px; }
-.litem:last-child { margin-bottom: 0; }
-.ldot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.legend{position:absolute;bottom:20px;right:20px;z-index:400;background:#fff;border:0.5px solid #E8E5DE;border-radius:10px;padding:12px 14px;font-family:'DM Sans',sans-serif}
+.ltitle{font-size:10px;font-weight:600;color:#aaa;letter-spacing:0.09em;text-transform:uppercase;margin-bottom:8px}
+.litem{display:flex;align-items:center;gap:8px;font-size:11px;color:#555;margin-bottom:5px}
+.litem:last-child{margin-bottom:0}
+.ldot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.lsep{margin-top:10px;padding-top:8px;border-top:0.5px solid #E8E5DE}
+.lsize{display:flex;align-items:center;gap:6px;margin-top:4px}
+/* Leaflet tooltip override */
+.leaflet-tooltip{font-family:'DM Sans',sans-serif!important;background:#0F2744!important;color:#fff!important;border:none!important;border-radius:8px!important;padding:8px 12px!important;box-shadow:0 2px 12px rgba(0,0,0,0.2)!important;font-size:12px!important}
+.leaflet-tooltip::before{display:none!important}
 /* RIGHT DRAWER */
-.rdrawer { position: absolute; top: 0; right: 0; bottom: 0; width: 380px; background: #fff; border-left: 0.5px solid #E8E5DE; transform: translateX(100%); transition: transform 0.28s cubic-bezier(0.4,0,0.2,1); z-index: 500; display: flex; flex-direction: column; overflow: hidden; }
-.rdrawer.on { transform: translateX(0); }
-.dhead { padding: 16px; border-bottom: 0.5px solid #E8E5DE; display: flex; align-items: flex-start; justify-content: space-between; flex-shrink: 0; background: #0F2744; }
-.dclose { font-size: 18px; color: rgba(255,255,255,0.5); cursor: pointer; background: none; border: none; padding: 0; line-height: 1; transition: color 0.12s; }
-.dclose:hover { color: #fff; }
-.dname { font-size: 15px; font-weight: 600; color: #fff; line-height: 1.25; flex: 1; margin-right: 12px; }
-.daddr { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 4px; }
-.dbody { flex: 1; overflow-y: auto; }
-.dbody::-webkit-scrollbar { width: 4px; }
-.dbody::-webkit-scrollbar-thumb { background: #E8E5DE; border-radius: 2px; }
-.dsec { padding: 16px; border-bottom: 0.5px solid #F2F0EC; }
-.dsl { font-size: 10px; font-weight: 600; color: #aaa; letter-spacing: 0.09em; text-transform: uppercase; margin-bottom: 12px; }
-.mgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.mc { background: #F7F5F1; border-radius: 8px; padding: 10px 12px; }
-.mv { font-size: 18px; font-weight: 600; color: #C8692A; line-height: 1; }
-.ml { font-size: 10px; color: #888; margin-top: 3px; }
-.dr { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 0.5px solid #F2F0EC; }
-.dr:last-child { border-bottom: none; }
-.dk { font-size: 12px; color: #888; }
-.dv { font-size: 12px; font-weight: 500; color: #0F2744; text-align: right; }
-.oblock { display: flex; align-items: center; gap: 10px; }
-.oav { width: 36px; height: 36px; border-radius: 8px; background: #E8EDF3; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #0F2744; flex-shrink: 0; }
-.oname { font-size: 13px; font-weight: 500; color: #0F2744; }
-.otype { font-size: 11px; color: #888; }
-.tags { display: flex; flex-wrap: wrap; gap: 6px; }
-.tag { font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 20px; }
-.tn { background: #E8EDF3; color: #0F2744; }
-.ta { background: #FBF0E9; color: #7A3A12; }
-.ts { background: #E8F5EE; color: #1a6b3a; }
-.tw { background: #FEF5E7; color: #7a5200; }
-.td { background: #FEECEC; color: #7a1a1a; }
-.ait { background: #F7F5F1; border-radius: 8px; padding: 14px; font-size: 12px; color: #555; line-height: 1.7; border-left: 2px solid #C8692A; }
-.ailabel { font-size: 10px; font-weight: 600; color: #C8692A; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-.aidot { width: 6px; height: 6px; border-radius: 50%; background: #C8692A; animation: pulse 2s infinite; }
-@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
-.dactions { padding: 16px; border-top: 0.5px solid #E8E5DE; display: flex; gap: 8px; flex-shrink: 0; }
-.btn-p { flex: 1; background: #C8692A; color: #fff; font-family: 'DM Sans',sans-serif; font-size: 13px; font-weight: 500; padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer; transition: background 0.15s; }
-.btn-p:hover { background: #A85520; }
-.btn-g { background: #fff; color: #0F2744; border: 0.5px solid #E8E5DE; font-family: 'DM Sans',sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; cursor: pointer; }
-.btn-g:hover { background: #F7F5F1; }
-.btn-a { background: #fff; color: #888; border: 0.5px solid #E8E5DE; font-family: 'DM Sans',sans-serif; font-size: 12px; font-weight: 500; padding: 9px 14px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
-.btn-a:hover { border-color: #C8692A; color: #C8692A; }
+.rdrawer{position:absolute;top:0;right:0;bottom:0;width:380px;background:#fff;border-left:0.5px solid #E8E5DE;transform:translateX(100%);transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);z-index:500;display:flex;flex-direction:column;overflow:hidden}
+.rdrawer.on{transform:translateX(0)}
+.dhead{padding:16px;border-bottom:0.5px solid #E8E5DE;display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0;background:#0F2744}
+.dclose{font-size:18px;color:rgba(255,255,255,0.5);cursor:pointer;background:none;border:none;padding:0;line-height:1;transition:color 0.12s}
+.dclose:hover{color:#fff}
+.dname{font-size:15px;font-weight:600;color:#fff;line-height:1.25;flex:1;margin-right:12px}
+.daddr{font-size:11px;color:rgba(255,255,255,0.5);margin-top:4px}
+.dbody{flex:1;overflow-y:auto}
+.dbody::-webkit-scrollbar{width:4px}
+.dbody::-webkit-scrollbar-thumb{background:#E8E5DE;border-radius:2px}
+.dsec{padding:16px;border-bottom:0.5px solid #F2F0EC}
+.dsl{font-size:10px;font-weight:600;color:#aaa;letter-spacing:0.09em;text-transform:uppercase;margin-bottom:12px}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mc{background:#F7F5F1;border-radius:8px;padding:10px 12px}
+.mv{font-size:18px;font-weight:600;color:#C8692A;line-height:1}
+.ml{font-size:10px;color:#888;margin-top:3px}
+.dr{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid #F2F0EC}
+.dr:last-child{border-bottom:none}
+.dk{font-size:12px;color:#888}
+.dv{font-size:12px;font-weight:500;color:#0F2744;text-align:right}
+.oblock{display:flex;align-items:center;gap:10px}
+.oav{width:36px;height:36px;border-radius:8px;background:#E8EDF3;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#0F2744;flex-shrink:0}
+.oname{font-size:13px;font-weight:500;color:#0F2744}
+.otype{font-size:11px;color:#888}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px}
+.tn{background:#E8EDF3;color:#0F2744}
+.ta{background:#FBF0E9;color:#7A3A12}
+.ts{background:#E8F5EE;color:#1a6b3a}
+.tw{background:#FEF5E7;color:#7a5200}
+.td{background:#FEECEC;color:#7a1a1a}
+.ait{background:#F7F5F1;border-radius:8px;padding:14px;font-size:12px;color:#555;line-height:1.7;border-left:2px solid #C8692A}
+.ailabel{font-size:10px;font-weight:600;color:#C8692A;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.aidot{width:6px;height:6px;border-radius:50%;background:#C8692A;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.dactions{padding:16px;border-top:0.5px solid #E8E5DE;display:flex;gap:8px;flex-shrink:0}
+.btn-p{flex:1;background:#C8692A;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:9px 18px;border-radius:8px;border:none;cursor:pointer;transition:background 0.15s}
+.btn-p:hover{background:#A85520}
+.btn-a{background:#fff;color:#888;border:0.5px solid #E8E5DE;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:9px 14px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.btn-a:hover{border-color:#C8692A;color:#C8692A}
+.btn-g{background:#fff;color:#0F2744;border:0.5px solid #E8E5DE;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:9px 16px;border-radius:8px;cursor:pointer}
+.btn-g:hover{background:#F7F5F1}
 /* WATCHLIST */
-.wlov { position: fixed; inset: 0; z-index: 800; background: rgba(15,39,68,0.4); backdrop-filter: blur(4px); display: none; align-items: flex-start; justify-content: flex-end; padding-top: 56px; }
-.wlov.on { display: flex; }
-.wlp { width: 360px; height: 100%; background: #fff; display: flex; flex-direction: column; border-left: 0.5px solid #E8E5DE; animation: sli 0.25s ease; }
-@keyframes sli { from{transform:translateX(100%)}to{transform:translateX(0)} }
-.wlh { padding: 16px; background: #0F2744; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-.wlt { font-size: 14px; font-weight: 600; color: #fff; }
-.wlc { background: none; border: none; font-size: 18px; color: rgba(255,255,255,0.5); cursor: pointer; }
-.wlc:hover { color: #fff; }
-.wlb { flex: 1; overflow-y: auto; padding: 8px 0; }
-.wli { padding: 12px 16px; border-bottom: 0.5px solid #F2F0EC; display: flex; align-items: flex-start; gap: 10px; }
-.wlin { flex: 1; }
-.wlin-n { font-size: 13px; font-weight: 500; color: #0F2744; }
-.wlin-m { font-size: 11px; color: #888; margin-top: 2px; }
-.wlr { font-size: 14px; color: #E8E5DE; cursor: pointer; }
-.wlr:hover { color: #C8692A; }
-.wlf { padding: 16px; border-top: 0.5px solid #E8E5DE; flex-shrink: 0; }
-.wle { padding: 40px 16px; text-align: center; color: #aaa; font-size: 12px; }
+.wlov{position:fixed;inset:0;z-index:800;background:rgba(15,39,68,0.4);backdrop-filter:blur(4px);display:none;align-items:flex-start;justify-content:flex-end;padding-top:56px}
+.wlov.on{display:flex}
+.wlp{width:360px;height:100%;background:#fff;display:flex;flex-direction:column;border-left:0.5px solid #E8E5DE;animation:sli 0.25s ease}
+@keyframes sli{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.wlh{padding:16px;background:#0F2744;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.wlt{font-size:14px;font-weight:600;color:#fff}
+.wlc{background:none;border:none;font-size:18px;color:rgba(255,255,255,0.5);cursor:pointer}
+.wlc:hover{color:#fff}
+.wlb{flex:1;overflow-y:auto;padding:8px 0}
+.wli{padding:12px 16px;border-bottom:0.5px solid #F2F0EC;display:flex;align-items:flex-start;gap:10px}
+.wlin{flex:1}
+.wlin-n{font-size:13px;font-weight:500;color:#0F2744}
+.wlin-m{font-size:11px;color:#888;margin-top:2px}
+.wlr{font-size:14px;color:#E8E5DE;cursor:pointer}
+.wlr:hover{color:#C8692A}
+.wlf{padding:16px;border-top:0.5px solid #E8E5DE;flex-shrink:0}
+.wle{padding:40px 16px;text-align:center;color:#aaa;font-size:12px}
 /* MODALS */
-.mov { position: fixed; inset: 0; z-index: 900; background: rgba(15,39,68,0.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; }
-.mov.on { display: flex; }
-.mbox { background: #fff; border-radius: 12px; padding: 28px; width: 420px; border: 0.5px solid #E8E5DE; animation: fu 0.2s ease; }
-@keyframes fu { from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)} }
-.micon { font-size: 32px; margin-bottom: 12px; }
-.mtitle { font-size: 16px; font-weight: 600; color: #0F2744; margin-bottom: 8px; }
-.mbody { font-size: 13px; color: #555; line-height: 1.65; margin-bottom: 16px; }
-.mnote { background: #FBF0E9; border-radius: 8px; padding: 12px; font-size: 12px; color: #7A3A12; margin-bottom: 20px; }
-.uz { border: 1.5px dashed #E8E5DE; border-radius: 8px; padding: 32px; text-align: center; cursor: pointer; transition: all 0.15s; margin: 16px 0; }
-.uz:hover { border-color: #C8692A; background: #FBF0E9; }
-input[type=file] { display: none; }
-/* Mapbox popup */
-.mapboxgl-popup-content { background: #0F2744 !important; color: #fff !important; border-radius: 8px !important; padding: 8px 12px !important; font-family: 'DM Sans',sans-serif !important; box-shadow: 0 2px 12px rgba(0,0,0,0.2) !important; }
-.mapboxgl-popup-tip { border-top-color: #0F2744 !important; border-bottom-color: #0F2744 !important; }
+.mov{position:fixed;inset:0;z-index:900;background:rgba(15,39,68,0.5);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center}
+.mov.on{display:flex}
+.mbox{background:#fff;border-radius:12px;padding:28px;width:420px;border:0.5px solid #E8E5DE;animation:fu 0.2s ease}
+@keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.micon{font-size:32px;margin-bottom:12px}
+.mtitle{font-size:16px;font-weight:600;color:#0F2744;margin-bottom:8px}
+.mbody{font-size:13px;color:#555;line-height:1.65;margin-bottom:16px}
+.mnote{background:#FBF0E9;border-radius:8px;padding:12px;font-size:12px;color:#7A3A12;margin-bottom:20px}
+.uz{border:1.5px dashed #E8E5DE;border-radius:8px;padding:32px;text-align:center;cursor:pointer;transition:all 0.15s;margin:16px 0}
+.uz:hover{border-color:#C8692A;background:#FBF0E9}
+input[type=file]{display:none}
 </style>
 </head>
 <body>
-
 <nav>
   <div class="nav-left">
     <img class="nav-logo" src="https://res.cloudinary.com/dsgfts9gp/image/upload/Gemini_Generated_Image_uao02uao02uao02u-remove-bg-io_mb5sys.png" alt="TP"/>
@@ -169,13 +196,13 @@ input[type=file] { display: none; }
     <button class="nav-btn" onclick="openWL()">☆ Watchlist <span class="wl-count" id="wlCount">0</span></button>
   </div>
 </nav>
-
 <div class="app-body">
   <div class="lp">
     <div class="lp-head">
       <div class="eyebrow">Market Scanner</div>
       <div class="lp-title">Netherlands · All Zones</div>
-      <div class="res-count"><span id="visCnt">67</span> assets · <span id="totSqm">3.4M sqm</span> GLA</div>
+      <div class="res-count"><span id="visCnt">95</span> assets · <span id="totSqm">0M sqm</span> GLA</div>
+      <button onclick="resetFilters()" style="margin-top:8px;font-family:'DM Sans',sans-serif;font-size:11px;color:#888;background:none;border:0.5px solid #E8E5DE;border-radius:6px;padding:3px 10px;cursor:pointer;">↺ Reset filters</button>
     </div>
     <div class="filt">
       <div class="flabel">Asset Size (GLA)</div>
@@ -200,6 +227,43 @@ input[type=file] { display: none; }
         <div class="chip" onclick="setF('tx','mid',this)">3–8 yrs</div>
         <div class="chip" onclick="setF('tx','old',this)">&gt;8 yrs</div>
       </div>
+      <div class="flabel" style="margin-top:10px">Clear Height</div>
+      <div class="frow" id="fr-height">
+        <div class="chip all on" onclick="setF('height','all',this)">All</div>
+        <div class="chip" onclick="setF('height','low',this)">&lt;9m</div>
+        <div class="chip" onclick="setF('height','mid',this)">9–11m</div>
+        <div class="chip" onclick="setF('height','grade',this)">12m+</div>
+        <div class="chip" onclick="setF('height','mega',this)">15m+</div>
+      </div>
+      <div class="flabel" style="margin-top:10px">Vacancy</div>
+      <div class="frow" id="fr-vac">
+        <div class="chip all on" onclick="setF('vac','all',this)">All</div>
+        <div class="chip" onclick="setF('vac','full',this)">Fully let</div>
+        <div class="chip" onclick="setF('vac','low',this)">&lt;10%</div>
+        <div class="chip" onclick="setF('vac','high',this)">&gt;10%</div>
+      </div>
+      <div class="flabel" style="margin-top:10px">Est. Value</div>
+      <div class="frow" id="fr-val">
+        <div class="chip all on" onclick="setF('val','all',this)">All</div>
+        <div class="chip" onclick="setF('val','small',this)">&lt;€20m</div>
+        <div class="chip" onclick="setF('val','mid',this)">€20–50m</div>
+        <div class="chip" onclick="setF('val','large',this)">€50–100m</div>
+        <div class="chip" onclick="setF('val','xl',this)">&gt;€100m</div>
+      </div>
+      <div class="flabel" style="margin-top:10px">Net Initial Yield</div>
+      <div class="frow" id="fr-niy">
+        <div class="chip all on" onclick="setF('niy','all',this)">All</div>
+        <div class="chip" onclick="setF('niy','core',this)">&lt;4%</div>
+        <div class="chip" onclick="setF('niy','mid',this)">4–5%</div>
+        <div class="chip" onclick="setF('niy','wide',this)">&gt;5%</div>
+      </div>
+      <div class="flabel" style="margin-top:10px">WAULT</div>
+      <div class="frow" id="fr-wault">
+        <div class="chip all on" onclick="setF('wault','all',this)">All</div>
+        <div class="chip" onclick="setF('wault','short',this)">&lt;3 yrs</div>
+        <div class="chip" onclick="setF('wault','mid',this)">3–6 yrs</div>
+        <div class="chip" onclick="setF('wault','long',this)">6+ yrs</div>
+      </div>
       <div class="flabel" style="margin-top:10px">Zone</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap" id="zchips">
         <div class="zchip on" onclick="setZone('all',this)">All zones</div>
@@ -211,30 +275,52 @@ input[type=file] { display: none; }
         <div class="zchip" onclick="setZone('roosendaal',this)">Roosendaal</div>
       </div>
     </div>
+    <div class="drag-divider" id="dragDivider">
+      <div class="drag-handle-bar"></div>
+    </div>
     <div class="alist" id="alist"></div>
-    <div style="padding:12px 16px;border-top:0.5px solid #E8E5DE;flex-shrink:0;background:#F7F5F1;">
-      <div style="font-size:10px;font-weight:600;color:#aaa;letter-spacing:0.09em;text-transform:uppercase;margin-bottom:6px">Data Methodology</div>
-      <div style="font-size:11px;color:#888;line-height:1.6">Demo dataset — <strong style="color:#555">121 curated assets</strong> with market-representative financials. Owner types, yield ranges, and submarket dynamics reflect real NL logistics benchmarks.</div>
-      <div style="margin-top:8px;padding:8px 10px;background:#FBF0E9;border-radius:6px;border-left:2px solid #C8692A;">
-        <div style="font-size:10px;font-weight:600;color:#7A3A12;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:3px">Production integration</div>
-        <div style="font-size:11px;color:#7A3A12;line-height:1.55">Real asset data requires <strong>BAG API</strong> (NL govt, free — location + GLA) and <strong>MSCI RCA / CoStar</strong> (transaction history, ownership). Upload your own dataset via CSV using the button above.</div>
+    <div class="data-note">
+      <div class="data-note-title">Data Methodology</div>
+      <div class="data-note-body">Demo dataset — <strong style="color:#555">95 curated assets</strong> with market-representative financials. Owner types, yield ranges, and submarket dynamics reflect real NL logistics benchmarks.</div>
+      <div class="data-note-prod">
+        <div class="data-note-prod-title">Production Integration</div>
+        <div class="data-note-prod-body">Real asset data requires <strong>BAG API</strong> (NL govt, free — location + GLA) and <strong>MSCI RCA / CoStar</strong> (transaction history, ownership). Upload your own dataset via CSV using the button above.</div>
       </div>
     </div>
   </div>
-
-  <div class="mwrap">
+  <div class="right-col">
+    <div class="opp-bar">
+      <div class="opp-label">Quick screens</div>
+      <div class="opp-btn" id="opp-offmarket" onclick="applyScreen('offmarket')">
+        <span class="opp-icon">🎯</span>
+        <div><div class="opp-name">Off-market targets</div><div class="opp-desc">Private · hold &gt;8 yrs · WAULT &lt;3 yrs</div></div>
+      </div>
+      <div class="opp-btn" id="opp-valueadd" onclick="applyScreen('valueadd')">
+        <span class="opp-icon">⚒</span>
+        <div><div class="opp-name">Value-add plays</div><div class="opp-desc">Vacancy &gt;0% or yield &gt;5% or spec &lt;9m</div></div>
+      </div>
+      <div class="opp-btn" id="opp-core" onclick="applyScreen('core')">
+        <span class="opp-icon">🏆</span>
+        <div><div class="opp-name">Core income</div><div class="opp-desc">Fully let · WAULT 6+ yrs · yield &lt;5%</div></div>
+      </div>
+      <div class="opp-btn" id="opp-gradea" onclick="applyScreen('gradea')">
+        <span class="opp-icon">✦</span>
+        <div><div class="opp-name">Grade A only</div><div class="opp-desc">12m+ height · fully let · &gt;10k sqm</div></div>
+      </div>
+    </div>
+    <div class="mwrap">
     <div id="map"></div>
     <button class="back-btn" id="backBtn" onclick="backToOv()">← All Zones</button>
     <div class="ibar" id="ibar"><div class="idot"></div><span id="ibarTxt">Click a warehouse to open the intelligence panel</span></div>
     <div class="legend">
       <div class="ltitle">Owner Type</div>
-      <div class="litem"><div class="ldot" style="background:#2A4A8A;border-radius:50%"></div>REIT</div>
-      <div class="litem"><div class="ldot" style="background:#2A6B4A;border-radius:50%"></div>Institutional</div>
-      <div class="litem"><div class="ldot" style="background:#C8692A;border-radius:50%"></div>Private</div>
-      <div class="litem"><div class="ldot" style="background:#6B2A8A;border-radius:50%"></div>Owner-Occupier</div>
-      <div style="margin-top:10px;padding-top:8px;border-top:0.5px solid #E8E5DE;">
+      <div class="litem"><div class="ldot" style="background:#2A4A8A"></div>REIT</div>
+      <div class="litem"><div class="ldot" style="background:#2A6B4A"></div>Institutional</div>
+      <div class="litem"><div class="ldot" style="background:#C8692A"></div>Private</div>
+      <div class="litem"><div class="ldot" style="background:#6B2A8A"></div>Owner-Occupier</div>
+      <div class="lsep">
         <div class="ltitle">Size = GLA</div>
-        <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+        <div class="lsize">
           <div style="width:8px;height:8px;border-radius:50%;background:#888;flex-shrink:0"></div>
           <div style="width:14px;height:14px;border-radius:50%;background:#888;flex-shrink:0"></div>
           <div style="width:20px;height:20px;border-radius:50%;background:#888;flex-shrink:0"></div>
@@ -253,9 +339,8 @@ input[type=file] { display: none; }
         <button class="btn-a" onclick="openAlert()">🔔 Alert</button>
       </div>
     </div>
-  </div>
-</div>
-
+    </div><!-- end mwrap -->
+  </div><!-- end right-col -->
 <!-- WATCHLIST -->
 <div class="wlov" id="wlov" onclick="if(event.target===this)closeWL()">
   <div class="wlp">
@@ -264,7 +349,6 @@ input[type=file] { display: none; }
     <div class="wlf"><button class="btn-p" style="width:100%" onclick="exportWL()">↓ Export to CSV</button></div>
   </div>
 </div>
-
 <!-- ALERT MODAL -->
 <div class="mov" id="alertMov" onclick="if(event.target===this)closeAlert()">
   <div class="mbox">
@@ -275,7 +359,6 @@ input[type=file] { display: none; }
     <div style="display:flex;gap:8px"><button class="btn-p" onclick="closeAlert()">Enable Alert</button><button class="btn-g" onclick="closeAlert()">Cancel</button></div>
   </div>
 </div>
-
 <!-- UPLOAD MODAL -->
 <div class="mov" id="upMov" onclick="if(event.target===this)closeUpload()">
   <div class="mbox">
@@ -294,37 +377,33 @@ input[type=file] { display: none; }
     <div style="display:flex;gap:8px"><button class="btn-p" onclick="closeUpload()">Close</button><button class="btn-g" onclick="dlTemplate()">↓ Template</button></div>
   </div>
 </div>
-
 <script>
-mapboxgl.accessToken = 'pk.eyJ1IjoidHBvcnR1bmF0byIsImEiOiJjbW5jdnNoamExM2lmMm9yNnowMm43YWhsIn0.cAWttYM89Ah_dADNRCJiIg';
-
-const ZONES = {
-  maasvlakte:{name:'Maasvlakte / Rotterdam',center:[4.05,51.958],zoom:13,color:'#C8692A'},
-  venlo:{name:'Venlo / Greenport',center:[6.17,51.37],zoom:13,color:'#0F2744'},
-  schiphol:{name:'Schiphol Logistics Park',center:[4.78,52.31],zoom:13,color:'#2A6B4A'},
-  tilburg:{name:'Tilburg / Waalwijk',center:[5.08,51.58],zoom:13,color:'#6B2A8A'},
-  almere:{name:'Almere / Flevoland',center:[5.22,52.37],zoom:13,color:'#2A4A8A'},
-  roosendaal:{name:'Roosendaal / Bergen op Zoom',center:[4.47,51.52],zoom:13,color:'#8A6B2A'}
+var ZONES={
+  maasvlakte:{name:'Maasvlakte / Rotterdam',center:[51.958,4.05],zoom:13,color:'#C8692A'},
+  venlo:{name:'Venlo / Greenport',center:[51.37,6.17],zoom:13,color:'#0F2744'},
+  schiphol:{name:'Schiphol Logistics Park',center:[52.31,4.78],zoom:13,color:'#2A6B4A'},
+  tilburg:{name:'Tilburg / Waalwijk',center:[51.58,5.08],zoom:13,color:'#6B2A8A'},
+  almere:{name:'Almere / Flevoland',center:[52.37,5.22],zoom:13,color:'#2A4A8A'},
+  roosendaal:{name:'Roosendaal / Bergen op Zoom',center:[51.52,4.47],zoom:13,color:'#8A6B2A'}
 };
-
-const ASSETS=[
-  // ── MAASVLAKTE ── (Maasvlakte 1+2 industrial plateau, Europoort, Botlek — all on reclaimed land)
-  {id:'mv01',zone:'maasvlakte',name:'Rotterdam Gateway DC',address:'Coloradoweg 40, Maasvlakte',lat:51.9558,lng:3.9980,gla:52400,built:2018,height:12.5,docks:68,lastTxDate:'2021-03',lastTxPrice:89.4,owner:'Prologis',ownerType:'REIT',wault:6.2,vacancy:0,yield:4.1,estValue:112.0,commentary:'Prime Grade A distribution hub at Europe\'s largest container terminal. Acquired by Prologis in 2021 at 4.5% NIY — cap rate compression has pushed estimated value to ~€112m. Long WAULT of 6.2 years and 100% occupancy make this a core hold. Monitor for lease expiry in 2030 as a potential re-letting or sale trigger.',tags:['Grade A','Core','Port-adjacent']},
-  {id:'mv02',zone:'maasvlakte',name:'Delta Logistics Centre',address:'Mississippihaven 8, Maasvlakte',lat:51.9538,lng:4.0020,gla:34200,built:2014,height:10.5,docks:42,lastTxDate:'2019-06',lastTxPrice:47.2,owner:'Montea NV',ownerType:'REIT',wault:3.1,vacancy:5,yield:4.8,estValue:58.0,commentary:'Older vintage port-adjacent asset. 5% vacancy is a mild concern. Clear height at 10.5m below modern Grade A spec — potential capex on re-letting. Short WAULT of 3.1 years creates near-term asset management opportunity.',tags:['Value-add','Port-adjacent','Re-let risk']},
-  {id:'mv03',zone:'maasvlakte',name:'Europoort Bulk Terminal',address:'Hartelweg 20, Europoort',lat:51.9522,lng:4.0068,gla:28750,built:2008,height:9.0,docks:30,lastTxDate:'2013-11',lastTxPrice:28.5,owner:'Kühne + Nagel',ownerType:'Owner-Occupier',wault:null,vacancy:0,yield:null,estValue:41.0,commentary:'Owner-occupied since 2013. Sale-and-leaseback potential given current appetite for owner-occupier deals in port locations. Estimated vacant possession value ~€41m. Older clear height (9m) limits value to operator-specific use.',tags:['Sale-leaseback candidate','Owner-occupier','Older vintage']},
-  {id:'mv04',zone:'maasvlakte',name:'Port Logistics Hub I',address:'Amazonehaven 12, Maasvlakte',lat:51.9575,lng:3.9942,gla:41800,built:2020,height:13.5,docks:56,lastTxDate:'2022-09',lastTxPrice:78.2,owner:'GLP Europe',ownerType:'Institutional',wault:7.8,vacancy:0,yield:3.9,estValue:98.0,commentary:'Recently traded Grade A asset with modern spec. GLP acquired in 2022 at 3.9% NIY reflecting peak pricing. Long WAULT at 7.8 years provides income visibility. Unlikely to be traded in short term.',tags:['Grade A','Core','Long WAULT']},
-  {id:'mv05',zone:'maasvlakte',name:'Botlek Distribution Park',address:'Chemieweg 18, Botlek',lat:51.8958,lng:4.2848,gla:19200,built:2006,height:8.5,docks:22,lastTxDate:'2016-04',lastTxPrice:18.7,owner:'Private (Veerman BV)',ownerType:'Private',wault:2.3,vacancy:12,yield:6.2,estValue:24.0,commentary:'Private-held older asset with above-market vacancy. Last traded 2016 at a wide yield. Current 6.2% NIY implies motivated seller potential. Capex required to bring to modern spec. Interesting for a buyer willing to take lease-up risk in a tight port market.',tags:['Value-add','Private owner','Vacancy risk']},
-  {id:'mv06',zone:'maasvlakte',name:'Gateway Cold Store',address:'Josefinalaan 7, Maasvlakte',lat:51.9542,lng:4.0108,gla:14500,built:2015,height:14.0,docks:18,lastTxDate:'2020-02',lastTxPrice:32.1,owner:'Lineage Logistics',ownerType:'Institutional',wault:9.1,vacancy:0,yield:4.5,estValue:39.0,commentary:'Specialist cold storage facility with high clear height (14m) purpose-built for refrigerated racking. Lineage is a dominant cold chain operator unlikely to vacate. Very long WAULT. Cold chain assets trade at a premium due to scarcity and operator stickiness.',tags:['Cold storage','Specialist','Core-plus']},
-  {id:'mv07',zone:'maasvlakte',name:'Pernis Cross-Dock',address:'Vondelingenplaat 45, Pernis',lat:51.8882,lng:4.3198,gla:8900,built:2011,height:8.0,docks:24,lastTxDate:'2018-07',lastTxPrice:9.8,owner:'Private (De Groot Logistics)',ownerType:'Private',wault:1.8,vacancy:0,yield:5.8,estValue:12.5,commentary:'Small cross-dock with very short WAULT — lease renewal risk is the primary concern. Private owner, no known disposal mandate. Below institutional lot size which limits buyer pool.',tags:['Cross-dock','Small lot','WAULT risk']},
-  {id:'mv08',zone:'maasvlakte',name:'Euromax Logistics I',address:'Lloydstraat 22, Maasvlakte',lat:51.9592,lng:3.9898,gla:63100,built:2019,height:12.5,docks:82,lastTxDate:'2023-01',lastTxPrice:104.5,owner:'Segro PLC',ownerType:'REIT',wault:8.4,vacancy:0,yield:3.8,estValue:118.0,commentary:'Largest Grade A asset in this cluster by GLA. Segro paid peak pricing in early 2023. Trophy core asset unlikely to trade. Watch for Segro capital recycling activity as a potential disposal signal.',tags:['Grade A','Trophy','REIT-owned']},
-  {id:'mv09',zone:'maasvlakte',name:'Container Terminal DC',address:'Mississippihaven 32, Maasvlakte',lat:51.9510,lng:4.0148,gla:22300,built:2016,height:11.0,docks:28,lastTxDate:'2024-05',lastTxPrice:38.4,owner:'Hines',ownerType:'Institutional',wault:5.6,vacancy:0,yield:4.3,estValue:40.0,commentary:'Recently traded in 2024 — market pricing reflects current yield environment. Hines is an active trader so potential disposal in medium term. NIY aligns with current benchmarks for port-adjacent Grade B/A- stock.',tags:['Recent transaction','Core','Mid-size']},
-  {id:'mv10',zone:'maasvlakte',name:'Calandkanaal Warehouse',address:'Calandkanaal Noord 14, Europoort',lat:51.9028,lng:4.2588,gla:11700,built:2003,height:7.5,docks:14,lastTxDate:'2011-03',lastTxPrice:8.2,owner:'Private (Van den Berg BV)',ownerType:'Private',wault:4.2,vacancy:8,yield:null,estValue:15.0,commentary:'Not traded for over 13 years. Private owner with limited institutional engagement. Below-spec clear height. Strong candidate for off-market outreach: owner may be unaware of current land value dynamics in this location.',tags:['Older vintage','Long hold','Off-market potential']},
-  {id:'mv11',zone:'maasvlakte',name:'Shell Pernis Logistics Annex',address:'Vondelingenweg 601, Pernis',lat:51.8908,lng:4.3058,gla:7200,built:2009,height:8.5,docks:10,lastTxDate:'2017-09',lastTxPrice:7.1,owner:'Private (Rooijakkers GmbH)',ownerType:'Private',wault:3.0,vacancy:15,yield:null,estValue:9.5,commentary:'High vacancy (15%) in a private-owned asset last traded in 2017. Below-spec clear height and small size limit institutional appeal. Port adjacency provides land value optionality.',tags:['High vacancy','Private','Repositioning']},
-  {id:'mv12',zone:'maasvlakte',name:'Maasvlakte Cold Chain Hub',address:'Australiehaven 22, Maasvlakte',lat:51.9622,lng:3.9852,gla:17800,built:2017,height:14.5,docks:20,lastTxDate:'2021-07',lastTxPrice:38.2,owner:'Lineage Logistics',ownerType:'Institutional',wault:8.6,vacancy:0,yield:4.3,estValue:46.0,commentary:'Second Lineage cold chain facility in the cluster. Twin assets make this a hard portfolio to displace. Long WAULT, specialist operator with high relocation cost.',tags:['Cold storage','Specialist','Operator sticky']},
-  {id:'mv13',zone:'maasvlakte',name:'Europoort Gateway II',address:'Coloradoweg 18, Maasvlakte',lat:51.9648,lng:3.9778,gla:38500,built:2021,height:13.0,docks:50,lastTxDate:'2022-04',lastTxPrice:68.0,owner:'Prologis',ownerType:'REIT',wault:7.2,vacancy:0,yield:4.0,estValue:80.0,commentary:'Prologis spec development completed 2021, let on long lease. Strong WAULT and full occupancy. Prologis rarely trades operational assets in port clusters.',tags:['Grade A','Prologis','New-build']},
-  {id:'mv14',zone:'maasvlakte',name:'Maasvlakte Bulk Store A',address:'Mississippihaven 50, Maasvlakte',lat:51.9488,lng:4.0188,gla:9400,built:2005,height:8.0,docks:12,lastTxDate:'2009-03',lastTxPrice:7.6,owner:'Private (Bakker Opslag BV)',ownerType:'Private',wault:2.5,vacancy:0,yield:6.4,estValue:11.0,commentary:'Long-held private asset not traded since 2009. Wide yield of 6.4%. Below-spec clear height limits re-letting. WAULT shortening — lease renewal approaching. Classic off-market opportunity.',tags:['Long hold','Off-market','WAULT risk']},
-  {id:'mv15',zone:'maasvlakte',name:'Rotterdam South DC',address:'Hartelweg 44, Europoort',lat:51.8978,lng:4.2718,gla:25600,built:2012,height:10.5,docks:32,lastTxDate:'2020-08',lastTxPrice:34.5,owner:'Cromwell Property Group',ownerType:'Institutional',wault:4.8,vacancy:5,yield:4.9,estValue:42.0,commentary:'Cromwell mid-vintage acquisition with mild vacancy. Cromwell has been active in European logistics recycling — disposal watch as fund approaches end of life.',tags:['Core-plus','Institutional','Fund lifecycle watch']},
-  {id:'mv16',zone:'maasvlakte',name:'Pernis Light Industrial',address:'Vondelingenweg 450, Pernis',lat:51.8938,lng:4.3128,gla:6800,built:2001,height:7.0,docks:8,lastTxDate:'2007-11',lastTxPrice:4.9,owner:'Private (Pietersen BV)',ownerType:'Private',wault:3.3,vacancy:20,yield:null,estValue:8.0,commentary:'Oldest and most distressed in Pernis. High vacancy, below-spec, 17-year private hold. Land value arguably exceeds building value. Redevelopment most likely value outcome.',tags:['Distressed','Older vintage','Redevelopment']},
+var ASSETS=[
+  // ── MAASVLAKTE ── spread across Maasvlakte 1, Maasvlakte 2, Europoort, Botlek, Pernis
+  {id:'mv01',zone:'maasvlakte',name:'Rotterdam Gateway DC',address:'Coloradoweg 40, Maasvlakte',lat:51.9565,lng:3.9922,gla:52400,built:2018,height:12.5,docks:68,lastTxDate:'2021-03',lastTxPrice:89.4,owner:'Prologis',ownerType:'REIT',wault:6.2,vacancy:0,yield:4.1,estValue:112.0,commentary:'Prime Grade A distribution hub at Europe\'s largest container terminal. Acquired by Prologis in 2021 at 4.5% NIY — cap rate compression has pushed estimated value to ~€112m. Long WAULT of 6.2 years and 100% occupancy make this a core hold. Monitor for lease expiry in 2030 as a potential re-letting or sale trigger.',tags:['Grade A','Core','Port-adjacent']},
+  {id:'mv02',zone:'maasvlakte',name:'Delta Logistics Centre',address:'Handelsweg 12, Ridderkerk',lat:51.8718,lng:4.6088,gla:34200,built:2014,height:10.5,docks:42,lastTxDate:'2019-06',lastTxPrice:47.2,owner:'Montea NV',ownerType:'REIT',wault:3.1,vacancy:5,yield:4.8,estValue:58.0,commentary:'Older vintage port-adjacent asset. 5% vacancy is a mild concern. Clear height at 10.5m below modern Grade A spec — potential capex on re-letting. Short WAULT of 3.1 years creates near-term asset management opportunity.',tags:['Value-add','Port-adjacent','Re-let risk']},
+  {id:'mv03',zone:'maasvlakte',name:'Europoort Bulk Terminal',address:'Hartelweg 20, Europoort',lat:51.8558,lng:4.5288,gla:28750,built:2008,height:9.0,docks:30,lastTxDate:'2013-11',lastTxPrice:28.5,owner:'Kühne + Nagel',ownerType:'Owner-Occupier',wault:null,vacancy:0,yield:null,estValue:41.0,commentary:'Owner-occupied since 2013. Sale-and-leaseback potential given current appetite for owner-occupier deals in port locations. Estimated vacant possession value ~€41m. Older clear height (9m) limits value to operator-specific use.',tags:['Sale-leaseback candidate','Owner-occupier','Older vintage']},
+  {id:'mv04',zone:'maasvlakte',name:'Port Logistics Hub I',address:'Donkerslootweg 20, Ridderkerk',lat:51.8648,lng:4.5888,gla:41800,built:2020,height:13.5,docks:56,lastTxDate:'2022-09',lastTxPrice:78.2,owner:'GLP Europe',ownerType:'Institutional',wault:7.8,vacancy:0,yield:3.9,estValue:98.0,commentary:'Recently traded Grade A asset with modern spec. GLP acquired in 2022 at 3.9% NIY reflecting peak pricing. Long WAULT at 7.8 years provides income visibility. Unlikely to be traded in short term.',tags:['Grade A','Core','Long WAULT']},
+  {id:'mv05',zone:'maasvlakte',name:'Botlek Distribution Park',address:'Industrieweg 8, Vlaardingen',lat:51.9028,lng:4.3648,gla:19200,built:2006,height:8.5,docks:22,lastTxDate:'2016-04',lastTxPrice:18.7,owner:'Private (Veerman BV)',ownerType:'Private',wault:2.3,vacancy:12,yield:6.2,estValue:24.0,commentary:'Private-held older asset with above-market vacancy. Last traded 2016 at a wide yield. Current 6.2% NIY implies motivated seller potential. Capex required to bring to modern spec. Interesting for a buyer willing to take lease-up risk in a tight port market.',tags:['Value-add','Private owner','Vacancy risk']},
+  {id:'mv06',zone:'maasvlakte',name:'Gateway Cold Store',address:'Cornelislandweg 30, Barendrecht',lat:51.8468,lng:4.5488,gla:14500,built:2015,height:14.0,docks:18,lastTxDate:'2020-02',lastTxPrice:32.1,owner:'Lineage Logistics',ownerType:'Institutional',wault:9.1,vacancy:0,yield:4.5,estValue:39.0,commentary:'Specialist cold storage facility with high clear height (14m) purpose-built for refrigerated racking. Lineage is a dominant cold chain operator unlikely to vacate. Very long WAULT. Cold chain assets trade at a premium due to scarcity and operator stickiness.',tags:['Cold storage','Specialist','Core-plus']},
+  {id:'mv07',zone:'maasvlakte',name:'Pernis Cross-Dock',address:'Industrieweg 15, Spijkenisse',lat:51.8458,lng:4.3488,gla:8900,built:2011,height:8.0,docks:24,lastTxDate:'2018-07',lastTxPrice:9.8,owner:'Private (De Groot Logistics)',ownerType:'Private',wault:1.8,vacancy:0,yield:5.8,estValue:12.5,commentary:'Small cross-dock with very short WAULT — lease renewal risk is the primary concern. Private owner, no known disposal mandate. Below institutional lot size which limits buyer pool.',tags:['Cross-dock','Small lot','WAULT risk']},
+  {id:'mv08',zone:'maasvlakte',name:'Euromax Logistics I',address:'Lloydstraat 22, Maasvlakte',lat:51.9642,lng:3.9788,gla:63100,built:2019,height:12.5,docks:82,lastTxDate:'2023-01',lastTxPrice:104.5,owner:'Segro PLC',ownerType:'REIT',wault:8.4,vacancy:0,yield:3.8,estValue:118.0,commentary:'Largest Grade A asset in this cluster by GLA. Segro paid peak pricing in early 2023. Trophy core asset unlikely to trade. Watch for Segro capital recycling activity as a potential disposal signal.',tags:['Grade A','Trophy','REIT-owned']},
+  {id:'mv09',zone:'maasvlakte',name:'Container Terminal DC',address:'Prismalaan 20, Bleiswijk',lat:51.9958,lng:4.5488,gla:22300,built:2016,height:11.0,docks:28,lastTxDate:'2024-05',lastTxPrice:38.4,owner:'Hines',ownerType:'Institutional',wault:5.6,vacancy:0,yield:4.3,estValue:40.0,commentary:'Recently traded in 2024 — market pricing reflects current yield environment. Hines is an active trader so potential disposal in medium term. NIY aligns with current benchmarks for port-adjacent Grade B/A- stock.',tags:['Recent transaction','Core','Mid-size']},
+  {id:'mv10',zone:'maasvlakte',name:'Calandkanaal Warehouse',address:'Vondelingenweg 200, Hoogvliet',lat:51.8718,lng:4.3488,gla:11700,built:2003,height:7.5,docks:14,lastTxDate:'2011-03',lastTxPrice:8.2,owner:'Private (Van den Berg BV)',ownerType:'Private',wault:4.2,vacancy:8,yield:null,estValue:15.0,commentary:'Not traded for over 13 years. Private owner with limited institutional engagement. Below-spec clear height. Strong candidate for off-market outreach: owner may be unaware of current land value dynamics in this location.',tags:['Older vintage','Long hold','Off-market potential']},
+  {id:'mv11',zone:'maasvlakte',name:'Shell Pernis Logistics Annex',address:'Nieuwe Damlaan 8, Schiedam',lat:51.9108,lng:4.4088,gla:7200,built:2009,height:8.5,docks:10,lastTxDate:'2017-09',lastTxPrice:7.1,owner:'Private (Rooijakkers GmbH)',ownerType:'Private',wault:3.0,vacancy:15,yield:null,estValue:9.5,commentary:'High vacancy (15%) in a private-owned asset last traded in 2017. Below-spec clear height and small size limit institutional appeal. Port adjacency provides land value optionality.',tags:['High vacancy','Private','Repositioning']},
+  {id:'mv12',zone:'maasvlakte',name:'Maasvlakte Cold Chain Hub',address:'Australiehaven 22, Maasvlakte',lat:51.9678,lng:3.9658,gla:17800,built:2017,height:14.5,docks:20,lastTxDate:'2021-07',lastTxPrice:38.2,owner:'Lineage Logistics',ownerType:'Institutional',wault:8.6,vacancy:0,yield:4.3,estValue:46.0,commentary:'Second Lineage cold chain facility in the cluster. Twin assets make this a hard portfolio to displace. Long WAULT, specialist operator with high relocation cost.',tags:['Cold storage','Specialist','Operator sticky']},
+  {id:'mv13',zone:'maasvlakte',name:'Europoort Gateway II',address:'Coloradoweg 18, Maasvlakte',lat:51.9582,lng:3.9748,gla:38500,built:2021,height:13.0,docks:50,lastTxDate:'2022-04',lastTxPrice:68.0,owner:'Prologis',ownerType:'REIT',wault:7.2,vacancy:0,yield:4.0,estValue:80.0,commentary:'Prologis spec development completed 2021, let on long lease. Strong WAULT and full occupancy. Prologis rarely trades operational assets in port clusters.',tags:['Grade A','Prologis','New-build']},
+  {id:'mv14',zone:'maasvlakte',name:'Maasvlakte Bulk Store A',address:'Berkelweg 30, Berkel en Rodenrijs',lat:51.9988,lng:4.4988,gla:9400,built:2005,height:8.0,docks:12,lastTxDate:'2009-03',lastTxPrice:7.6,owner:'Private (Bakker Opslag BV)',ownerType:'Private',wault:2.5,vacancy:0,yield:6.4,estValue:11.0,commentary:'Long-held private asset not traded since 2009. Wide yield of 6.4%. Below-spec clear height limits re-letting. WAULT shortening — lease renewal approaching. Classic off-market opportunity.',tags:['Long hold','Off-market','WAULT risk']},
+  {id:'mv15',zone:'maasvlakte',name:'Rotterdam South DC',address:'Hartelweg 44, Europoort',lat:51.9048,lng:4.2588,gla:25600,built:2012,height:10.5,docks:32,lastTxDate:'2020-08',lastTxPrice:34.5,owner:'Cromwell Property Group',ownerType:'Institutional',wault:4.8,vacancy:5,yield:4.9,estValue:42.0,commentary:'Cromwell mid-vintage acquisition with mild vacancy. Cromwell has been active in European logistics recycling — disposal watch as fund approaches end of life.',tags:['Core-plus','Institutional','Fund lifecycle watch']},
+  {id:'mv16',zone:'maasvlakte',name:'Pernis Light Industrial',address:'Rivium Oostlaan 20, Capelle aan den IJssel',lat:51.9258,lng:4.5688,gla:6800,built:2001,height:7.0,docks:8,lastTxDate:'2007-11',lastTxPrice:4.9,owner:'Private (Pietersen BV)',ownerType:'Private',wault:3.3,vacancy:20,yield:null,estValue:8.0,commentary:'Oldest and most distressed in Pernis. High vacancy, below-spec, 17-year private hold. Land value arguably exceeds building value. Redevelopment most likely value outcome.',tags:['Distressed','Older vintage','Redevelopment']},
 
   // ── VENLO ── (Tradeport Noord/Oost industrial zones, east of city)
   {id:'vn01',zone:'venlo',name:'Venlo Logistics Park A',address:'Kazerneplein 20, Venlo',lat:51.3848,lng:6.1688,gla:58200,built:2017,height:12.5,docks:74,lastTxDate:'2020-11',lastTxPrice:82.5,owner:'CBRE Investment Management',ownerType:'Institutional',wault:6.8,vacancy:0,yield:4.2,estValue:96.0,commentary:'Large-format Grade A distribution centre at the heart of Venlo. Full occupancy, strong WAULT. Venlo\'s tri-border position (NL/DE/BE) underpins long-term demand. Benchmarkable core asset for any European logistics fund.',tags:['Grade A','Core','Tri-border location']},
@@ -412,290 +491,453 @@ const ASSETS=[
   {id:'ro13',zone:'roosendaal',name:'Bergen op Zoom North DC',address:'Theodorushaven 44, Bergen op Zoom',lat:51.5048,lng:4.2948,gla:28400,built:2016,height:11.5,docks:36,lastTxDate:'2020-11',lastTxPrice:40.2,owner:'W.P. Carey',ownerType:'REIT',wault:4.8,vacancy:0,yield:4.7,estValue:51.0,commentary:'W.P. Carey sale-leaseback adjacent to their existing Bergen op Zoom asset. WAULT declining across both assets — portfolio-level re-pricing event.',tags:['REIT','Sale-leaseback','Portfolio disposal watch']},
   {id:'ro14',zone:'roosendaal',name:'Roosendaal E-Commerce DC',address:'Borchwerf II 28, Roosendaal',lat:51.5388,lng:4.4748,gla:43500,built:2021,height:13.0,docks:56,lastTxDate:'2023-05',lastTxPrice:78.5,owner:'Mileway',ownerType:'Institutional',wault:7.6,vacancy:0,yield:4.0,estValue:88.0,commentary:'Mileway (Blackstone) e-commerce focused DC. Strong Grade A spec, long WAULT. Monitor for Blackstone fund-level exit as primary disposal trigger.',tags:['Grade A','E-commerce','Blackstone']},
   {id:'ro15',zone:'roosendaal',name:'Zevenbergen Distribution Hub',address:'Industriepark de Koekoek 8, Zevenbergen',lat:51.6428,lng:4.6088,gla:17500,built:2010,height:9.5,docks:22,lastTxDate:'2017-03',lastTxPrice:18.9,owner:'Private (Zevenbergen BV)',ownerType:'Private',wault:3.8,vacancy:0,yield:5.6,estValue:23.0,commentary:'6-year private hold. Zevenbergen emerging logistics node on the A16/A17 interchange. Clean occupancy, wide yield at 5.6%. Off-market approach recommended.',tags:['Private','Emerging node','Off-market candidate']}
+];
 
-// STATE
-let map, currentZone=null, selectedId=null, watchlist=[];
-let F={gla:'all',own:'all',tx:'all',zone:'all'};
-const zMarkers={};
+// ── STATE ──
+var map, currentZone=null, selectedId=null, watchlist=[];
+var F={gla:'all',own:'all',tx:'all',zone:'all',height:'all',vac:'all',val:'all',niy:'all',wault:'all'};
+var activeScreen=null;
+var zMarkerObjs={}, assetMarkers={};
 
 function oc(t){return{REIT:'#2A4A8A',Institutional:'#2A6B4A',Private:'#C8692A','Owner-Occupier':'#6B2A8A'}[t]||'#0F2744';}
-function fmtGLA(n){return n>=1000?(n/1000).toFixed(1)+'k':n.toString();}
+function fmtGLA(n){return n>=1000?(n/1000).toFixed(1)+'k':String(n);}
+function glaToRadius(g){var mn=7000,mx=132000,rMin=6,rMax=22,t=Math.log(Math.max(g,mn)/mn)/Math.log(mx/mn);return Math.round(rMin+(rMax-rMin)*t);}
 
-// INIT
+// ── INIT ──
 function init(){
-  map=new mapboxgl.Map({container:'map',style:'mapbox://styles/mapbox/light-v11',center:[5.3,52.2],zoom:7,attributionControl:false});
-  map.addControl(new mapboxgl.NavigationControl({showCompass:false}),'bottom-right');
-  map.on('load',()=>{
-    buildLayers();
-    renderZoneMarkers();
-    renderList();
-  });
+  map=L.map('map',{zoomControl:false,attributionControl:false}).setView([51.9,5.3],9);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19}).addTo(map);
+  L.control.zoom({position:'bottomright'}).addTo(map);
+  renderZoneMarkers();
+  renderList();
+  updateCnt();
 }
 
-// LAYERS — circle markers sized by GLA
-function buildLayers(){
-  // GLA range for sizing: min ~7k, max ~132k. Map to radius 8–28px at zoom 13.
-  const feats=ASSETS.map(a=>({
-    type:'Feature', id:a.id,
-    properties:{id:a.id,zone:a.zone,name:a.name,ownerType:a.ownerType,gla:a.gla,estValue:a.estValue,color:oc(a.ownerType),radius:glaToRadius(a.gla)},
-    geometry:{type:'Point',coordinates:[a.lng,a.lat]}
-  }));
-  map.addSource('wh',{type:'geojson',data:{type:'FeatureCollection',features:feats}});
-
-  // Outer ring (selected state highlight)
-  map.addLayer({id:'wh-sel',type:'circle',source:'wh',layout:{visibility:'none'},paint:{
-    'circle-radius':['interpolate',['linear'],['zoom'],11,['*',['get','radius'],0.6],14,['*',['get','radius'],1.5]],
-    'circle-color':['get','color'],
-    'circle-opacity':['case',['boolean',['feature-state','sel'],false],0.25,0],
-    'circle-stroke-width':['case',['boolean',['feature-state','sel'],false],2.5,0],
-    'circle-stroke-color':['get','color']
-  }});
-
-  // Main circle
-  map.addLayer({id:'wh-circle',type:'circle',source:'wh',layout:{visibility:'none'},paint:{
-    'circle-radius':['interpolate',['linear'],['zoom'],11,['*',['get','radius'],0.5],14,['get','radius']],
-    'circle-color':['get','color'],
-    'circle-opacity':['case',['boolean',['feature-state','sel'],false],1,['boolean',['feature-state','hov'],false],0.9,0.75],
-    'circle-stroke-width':['case',['boolean',['feature-state','sel'],false],2.5,1.5],
-    'circle-stroke-color':'#ffffff',
-    'circle-stroke-opacity':0.9
-  }});
-
-  let hovId=null;
-  const pop=new mapboxgl.Popup({closeButton:false,closeOnClick:false,offset:12});
-  map.on('mousemove','wh-circle',e=>{
-    map.getCanvas().style.cursor='pointer';
-    if(hovId!==null)map.setFeatureState({source:'wh',id:hovId},{hov:false});
-    hovId=e.features[0].id;
-    map.setFeatureState({source:'wh',id:hovId},{hov:true});
-    const p=e.features[0].properties;
-    pop.setLngLat(e.lngLat).setHTML(
-      `<div style="font-family:'DM Sans',sans-serif;min-width:160px">` +
-      `<div style="font-size:12px;font-weight:600;color:#fff;margin-bottom:3px">${p.name}</div>` +
-      `<div style="font-size:11px;color:rgba(255,255,255,0.65)">${fmtGLA(p.gla)} sqm · ${p.ownerType}</div>` +
-      `${p.estValue?`<div style="font-size:11px;color:#C8692A;font-weight:600;margin-top:2px">€${p.estValue}m est.</div>`:''}</div>`
-    ).addTo(map);
-  });
-  map.on('mouseleave','wh-circle',()=>{
-    map.getCanvas().style.cursor='';
-    if(hovId!==null)map.setFeatureState({source:'wh',id:hovId},{hov:false});
-    hovId=null; pop.remove();
-  });
-  map.on('click','wh-circle',e=>{e.preventDefault();openDrawer(e.features[0].properties.id);});
-}
-
-// Map GLA to base radius at zoom 13 (px). Log scale feels right.
-function glaToRadius(gla){
-  const mn=7000,mx=132000,rMin=8,rMax=28;
-  const t=Math.log(Math.max(gla,mn)/mn)/Math.log(mx/mn);
-  return Math.round(rMin+(rMax-rMin)*t);
-}
-
-function showPolys(){
-  map.setLayoutProperty('wh-sel','visibility','visible');
-  map.setLayoutProperty('wh-circle','visibility','visible');
-  filterPolys();
-}
-function hidePolys(){
-  map.setLayoutProperty('wh-sel','visibility','none');
-  map.setLayoutProperty('wh-circle','visibility','none');
-}
-function filterPolys(){
-  const ids=getFiltered().filter(a=>!currentZone||a.zone===currentZone).map(a=>a.id);
-  const f=ids.length?['in',['get','id'],['literal',ids]]:['==','1','2'];
-  map.setFilter('wh-sel',f);
-  map.setFilter('wh-circle',f);
-}
-
-// ZONE MARKERS
+// ── ZONE MARKERS ──
 function renderZoneMarkers(){
-  Object.values(zMarkers).forEach(m=>m&&m.remove());
-  Object.keys(zMarkers).forEach(k=>delete zMarkers[k]);
-  const keys=F.zone==='all'?Object.keys(ZONES):[F.zone];
-  keys.forEach(k=>{
-    const z=ZONES[k],cnt=getFiltered().filter(a=>a.zone===k).length;
+  Object.values(zMarkerObjs).forEach(function(m){m.remove();});
+  zMarkerObjs={};
+  var keys=F.zone==='all'?Object.keys(ZONES):[F.zone];
+  keys.forEach(function(k){
+    var z=ZONES[k], cnt=getFiltered().filter(function(a){return a.zone===k;}).length;
     if(!cnt)return;
-    const el=document.createElement('div');
-    el.className='zm';el.style.background=z.color;
-    el.innerHTML=`<span>${z.name}</span><span class="zmc">${cnt}</span>`;
-    el.addEventListener('click',()=>zoomZone(k));
-    zMarkers[k]=new mapboxgl.Marker({element:el,anchor:'center'}).setLngLat(z.center).addTo(map);
+    var html='<div style="background:'+z.color+';color:#fff;font-family:DM Sans,sans-serif;font-size:11px;font-weight:600;padding:6px 12px;border-radius:20px;white-space:nowrap;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid rgba(255,255,255,0.35);display:inline-flex;align-items:center;gap:6px;" onclick="zoomZone(\''+k+'\')">'
+      +'<span>'+z.name+'</span>'
+      +'<span style="background:rgba(255,255,255,0.25);border-radius:10px;padding:1px 6px;font-size:10px">'+cnt+'</span>'
+      +'</div>';
+    var icon=L.divIcon({html:html,className:'',iconAnchor:[0,0]});
+    var marker=L.marker(z.center,{icon:icon}).addTo(map);
+    // Reposition after render so badge is centred on the coordinate
+    marker.on('add',function(){
+      var el=marker.getElement();
+      if(el){
+        var inner=el.querySelector('div');
+        if(inner){
+          var w=inner.offsetWidth,h=inner.offsetHeight;
+          el.style.marginLeft=(-w/2)+'px';
+          el.style.marginTop=(-h/2)+'px';
+        }
+      }
+    });
+    zMarkerObjs[k]=marker;
   });
 }
-function clearZMarkers(){Object.values(zMarkers).forEach(m=>m&&m.remove());Object.keys(zMarkers).forEach(k=>delete zMarkers[k]);}
 
+function clearZMarkers(){
+  Object.values(zMarkerObjs).forEach(function(m){m.remove();});
+  zMarkerObjs={};
+}
+
+// ── ASSET MARKERS ──
+function buildAssetMarkers(zoneKey){
+  clearAssetMarkers();
+  var assets=getFiltered().filter(function(a){return a.zone===zoneKey;});
+  assets.forEach(function(a){
+    var r=glaToRadius(a.gla), color=oc(a.ownerType);
+    var m=L.circleMarker([a.lat,a.lng],{
+      radius:r, fillColor:color, color:'#fff',
+      weight:a.id===selectedId?3:1.5,
+      fillOpacity:a.id===selectedId?0.95:0.75, opacity:1
+    }).addTo(map);
+    m.bindTooltip(
+      '<strong>'+a.name+'</strong><br><span style="font-size:11px;color:rgba(255,255,255,0.7)">'+fmtGLA(a.gla)+' sqm · '+a.ownerType+'</span>'+(a.estValue?'<br><span style="font-size:11px;color:#C8692A;font-weight:600">€'+a.estValue+'m est.</span>':''),
+      {sticky:true,opacity:1}
+    );
+    m.on('click',function(){openDrawer(a.id);});
+    assetMarkers[a.id]=m;
+  });
+}
+
+function clearAssetMarkers(){
+  Object.values(assetMarkers).forEach(function(m){m.remove();});
+  assetMarkers={};
+}
+
+function refreshMarkerStyles(){
+  Object.keys(assetMarkers).forEach(function(id){
+    var m=assetMarkers[id];
+    m.setStyle({weight:id===selectedId?3:1.5, fillOpacity:id===selectedId?0.95:0.75});
+  });
+}
+
+// ── ZOOM / BACK ──
 function zoomZone(k){
-  currentZone=k;F.zone=k;
+  currentZone=k; F.zone=k;
   clearZMarkers();
-  map.flyTo({center:ZONES[k].center,zoom:ZONES[k].zoom,duration:1300,essential:true});
-  setTimeout(()=>{
-    showPolys();
+  var z=ZONES[k];
+  map.flyTo(z.center,z.zoom,{duration:1.3});
+  setTimeout(function(){
+    buildAssetMarkers(k);
     document.getElementById('backBtn').classList.add('on');
-    const cnt=getFiltered().filter(a=>a.zone===k).length;
-    document.getElementById('ibarTxt').textContent=`${ZONES[k].name} · ${cnt} assets · Click a warehouse to open intelligence panel`;
+    var cnt=getFiltered().filter(function(a){return a.zone===k;}).length;
+    document.getElementById('ibarTxt').textContent=z.name+' · '+cnt+' assets · Click a warehouse to open intelligence panel';
     document.getElementById('ibar').classList.add('on');
   },1350);
-  document.querySelectorAll('.zchip').forEach(c=>c.classList.remove('on'));
-  document.querySelectorAll('.zchip').forEach(c=>{if(c.textContent.toLowerCase().startsWith(k.substring(0,4)))c.classList.add('on');});
+  document.querySelectorAll('.zchip').forEach(function(c){c.classList.remove('on');});
+  document.querySelectorAll('.zchip').forEach(function(c){if(c.textContent.toLowerCase().startsWith(k.substring(0,4)))c.classList.add('on');});
   renderList();
 }
 
 function backToOv(){
-  currentZone=null;F.zone='all';selectedId=null;
-  hidePolys();closeDrawer();clearSel();
+  currentZone=null; F.zone='all'; selectedId=null;
+  clearAssetMarkers(); closeDrawer();
   document.getElementById('backBtn').classList.remove('on');
   document.getElementById('ibar').classList.remove('on');
-  map.flyTo({center:[5.3,52.2],zoom:7,duration:1300,essential:true});
-  setTimeout(()=>renderZoneMarkers(),1350);
-  document.querySelectorAll('.zchip').forEach((c,i)=>{c.classList.toggle('on',i===0);});
+  map.flyTo([51.9,5.3],9,{duration:1.3});
+  setTimeout(function(){renderZoneMarkers();},1350);
+  document.querySelectorAll('.zchip').forEach(function(c,i){c.classList.toggle('on',i===0);});
   renderList();
 }
 
-// DRAWER
+// ── DRAWER ──
 function openDrawer(id){
-  const a=ASSETS.find(x=>x.id===id);if(!a)return;
-  clearSel();selectedId=id;
-  map.setFeatureState({source:'wh',id},{sel:true});
+  var a=ASSETS.find(function(x){return x.id===id;});
+  if(!a)return;
+  selectedId=id;
+  refreshMarkerStyles();
   document.getElementById('dname').textContent=a.name;
   document.getElementById('daddr').textContent=a.address;
-  const isW=watchlist.includes(id);
-  const btn=document.getElementById('wlBtn');
+  var isW=watchlist.indexOf(id)!==-1;
+  var btn=document.getElementById('wlBtn');
   btn.textContent=isW?'★ On Watchlist':'☆ Add to Watchlist';
   btn.style.background=isW?'#7A3A12':'#C8692A';
-  const yr=a.lastTxDate?parseInt(a.lastTxDate.split('-')[0]):0;
-  const age=new Date().getFullYear()-yr;
-  const tc=age<3?'ts':age<8?'tw':'td';
-  const vc=a.estValue&&a.lastTxPrice?Math.round((a.estValue-a.lastTxPrice)/a.lastTxPrice*100):null;
-  document.getElementById('dbody').innerHTML=`
-    <div class="dsec"><div class="dsl">Key Metrics</div>
-      <div class="mgrid">
-        <div class="mc"><div class="mv">${fmtGLA(a.gla)}</div><div class="ml">GLA (sqm)</div></div>
-        <div class="mc"><div class="mv">${a.estValue?'€'+a.estValue+'m':'N/A'}</div><div class="ml">Est. Value</div></div>
-        <div class="mc"><div class="mv">${a.yield?a.yield+'%':'N/A'}</div><div class="ml">Net Initial Yield</div></div>
-        <div class="mc"><div class="mv">${a.wault?a.wault+' yrs':'N/A'}</div><div class="ml">WAULT</div></div>
-      </div></div>
-    <div class="dsec"><div class="dsl">Asset Specifications</div>
-      <div class="dr"><span class="dk">Year built</span><span class="dv">${a.built}</span></div>
-      <div class="dr"><span class="dk">Clear height</span><span class="dv">${a.height}m</span></div>
-      <div class="dr"><span class="dk">Loading docks</span><span class="dv">${a.docks}</span></div>
-      <div class="dr"><span class="dk">Vacancy</span><span class="dv">${a.vacancy}%</span></div>
-    </div>
-    <div class="dsec"><div class="dsl">Ownership & Transaction</div>
-      <div class="oblock" style="margin-bottom:12px">
-        <div class="oav">${a.owner.substring(0,2).toUpperCase()}</div>
-        <div><div class="oname">${a.owner}</div><div class="otype">${a.ownerType}</div></div>
-      </div>
-      <div class="dr"><span class="dk">Last transaction</span><span class="dv">${a.lastTxDate||'Unknown'}</span></div>
-      <div class="dr"><span class="dk">Last price</span><span class="dv">${a.lastTxPrice?'€'+a.lastTxPrice+'m':'N/A'}</span></div>
-      <div class="dr"><span class="dk">Est. current value</span><span class="dv">${a.estValue?'€'+a.estValue+'m':'N/A'}</span></div>
-      <div class="dr"><span class="dk">Value change</span><span class="dv" style="color:${vc>0?'#1a6b3a':'#7a1a1a'}">${vc!==null?(vc>0?'+':'')+vc+'%':'N/A'}</span></div>
-    </div>
-    <div class="dsec"><div class="dsl">Classification</div>
-      <div class="tags">
-        <span class="tag tn">${a.ownerType}</span>
-        <span class="tag ${tc}">${age>0?age+' yrs since tx':'No tx data'}</span>
-        ${a.tags.map(t=>`<span class="tag ta">${t}</span>`).join('')}
-      </div></div>
-    <div class="dsec">
-      <div class="ailabel"><div class="aidot"></div>Radar Intelligence</div>
-      <div class="ait">${a.commentary}</div>
-    </div>`;
+  var yr=a.lastTxDate?parseInt(a.lastTxDate.split('-')[0]):0;
+  var age=new Date().getFullYear()-yr;
+  var tc=age<3?'ts':age<8?'tw':'td';
+  var vc=a.estValue&&a.lastTxPrice?Math.round((a.estValue-a.lastTxPrice)/a.lastTxPrice*100):null;
+  document.getElementById('dbody').innerHTML=
+    '<div class="dsec"><div class="dsl">Key Metrics</div>'+
+    '<div class="mgrid">'+
+    '<div class="mc"><div class="mv">'+fmtGLA(a.gla)+'</div><div class="ml">GLA (sqm)</div></div>'+
+    '<div class="mc"><div class="mv">'+(a.estValue?'€'+a.estValue+'m':'N/A')+'</div><div class="ml">Est. Value</div></div>'+
+    '<div class="mc"><div class="mv">'+(a.yield?a.yield+'%':'N/A')+'</div><div class="ml">Net Initial Yield</div></div>'+
+    '<div class="mc"><div class="mv">'+(a.wault?a.wault+' yrs':'N/A')+'</div><div class="ml">WAULT</div></div>'+
+    '</div></div>'+
+    '<div class="dsec"><div class="dsl">Asset Specifications</div>'+
+    '<div class="dr"><span class="dk">Year built</span><span class="dv">'+a.built+'</span></div>'+
+    '<div class="dr"><span class="dk">Clear height</span><span class="dv">'+a.height+'m</span></div>'+
+    '<div class="dr"><span class="dk">Loading docks</span><span class="dv">'+a.docks+'</span></div>'+
+    '<div class="dr"><span class="dk">Vacancy</span><span class="dv">'+a.vacancy+'%</span></div>'+
+    '</div>'+
+    '<div class="dsec"><div class="dsl">Ownership & Transaction</div>'+
+    '<div class="oblock" style="margin-bottom:12px">'+
+    '<div class="oav">'+a.owner.substring(0,2).toUpperCase()+'</div>'+
+    '<div><div class="oname">'+a.owner+'</div><div class="otype">'+a.ownerType+'</div></div>'+
+    '</div>'+
+    '<div class="dr"><span class="dk">Last transaction</span><span class="dv">'+(a.lastTxDate||'Unknown')+'</span></div>'+
+    '<div class="dr"><span class="dk">Last price</span><span class="dv">'+(a.lastTxPrice?'€'+a.lastTxPrice+'m':'N/A')+'</span></div>'+
+    '<div class="dr"><span class="dk">Est. current value</span><span class="dv">'+(a.estValue?'€'+a.estValue+'m':'N/A')+'</span></div>'+
+    '<div class="dr"><span class="dk">Value change</span><span class="dv" style="color:'+(vc>0?'#1a6b3a':'#7a1a1a')+'">'+(vc!==null?(vc>0?'+':'')+vc+'%':'N/A')+'</span></div>'+
+    '</div>'+
+    '<div class="dsec"><div class="dsl">Classification</div>'+
+    '<div class="tags">'+
+    '<span class="tag tn">'+a.ownerType+'</span>'+
+    '<span class="tag '+tc+'">'+(age>0?age+' yrs since tx':'No tx data')+'</span>'+
+    a.tags.map(function(t){return '<span class="tag ta">'+t+'</span>';}).join('')+
+    '</div></div>'+
+    '<div class="dsec"><div class="ailabel"><div class="aidot"></div>Radar Intelligence</div>'+
+    '<div class="ait">'+a.commentary+'</div></div>';
   document.getElementById('rdrawer').classList.add('on');
-  document.querySelectorAll('.aitem').forEach(el=>el.classList.remove('on'));
-  const li=document.querySelector(`[data-id="${id}"]`);
+  document.querySelectorAll('.aitem').forEach(function(el){el.classList.remove('on');});
+  var li=document.querySelector('[data-id="'+id+'"]');
   if(li){li.classList.add('on');li.scrollIntoView({block:'nearest',behavior:'smooth'});}
 }
-function clearSel(){if(selectedId)map.setFeatureState({source:'wh',id:selectedId},{sel:false});}
-function closeDrawer(){clearSel();selectedId=null;document.getElementById('rdrawer').classList.remove('on');document.querySelectorAll('.aitem').forEach(el=>el.classList.remove('on'));}
 
-// FILTERS
+function closeDrawer(){
+  selectedId=null;
+  document.getElementById('rdrawer').classList.remove('on');
+  document.querySelectorAll('.aitem').forEach(function(el){el.classList.remove('on');});
+  refreshMarkerStyles();
+}
+
+// ── FILTERS ──
 function getFiltered(){
-  return ASSETS.filter(a=>{
+  return ASSETS.filter(function(a){
     if(F.gla==='small'&&a.gla>=10000)return false;
     if(F.gla==='mid'&&(a.gla<10000||a.gla>30000))return false;
     if(F.gla==='large'&&a.gla<=30000)return false;
     if(F.own!=='all'&&a.ownerType!==F.own)return false;
-    if(F.tx!=='all'){const age=new Date().getFullYear()-(a.lastTxDate?parseInt(a.lastTxDate.split('-')[0]):0);if(F.tx==='recent'&&age>=3)return false;if(F.tx==='mid'&&(age<3||age>8))return false;if(F.tx==='old'&&age<=8)return false;}
+    if(F.tx!=='all'){
+      var age=new Date().getFullYear()-(a.lastTxDate?parseInt(a.lastTxDate.split('-')[0]):0);
+      if(F.tx==='recent'&&age>=3)return false;
+      if(F.tx==='mid'&&(age<3||age>8))return false;
+      if(F.tx==='old'&&age<=8)return false;
+    }
+    if(F.height==='low'&&a.height>=9)return false;
+    if(F.height==='mid'&&(a.height<9||a.height>=12))return false;
+    if(F.height==='grade'&&a.height<12)return false;
+    if(F.height==='mega'&&a.height<15)return false;
+    if(F.vac==='full'&&a.vacancy>0)return false;
+    if(F.vac==='low'&&(a.vacancy===0||a.vacancy>=10))return false;
+    if(F.vac==='high'&&a.vacancy<10)return false;
+    if(F.val!=='all'){
+      var v=a.estValue||0;
+      if(F.val==='small'&&v>=20)return false;
+      if(F.val==='mid'&&(v<20||v>=50))return false;
+      if(F.val==='large'&&(v<50||v>=100))return false;
+      if(F.val==='xl'&&v<100)return false;
+    }
+    if(F.niy!=='all'){
+      if(!a.yield)return false;
+      if(F.niy==='core'&&a.yield>=4)return false;
+      if(F.niy==='mid'&&(a.yield<4||a.yield>=5))return false;
+      if(F.niy==='wide'&&a.yield<5)return false;
+    }
+    if(F.wault!=='all'){
+      if(a.wault===null||a.wault===undefined)return false;
+      if(F.wault==='short'&&a.wault>=3)return false;
+      if(F.wault==='mid'&&(a.wault<3||a.wault>=6))return false;
+      if(F.wault==='long'&&a.wault<6)return false;
+    }
     if(F.zone!=='all'&&a.zone!==F.zone)return false;
     return true;
   });
 }
+
 function setF(k,v,el){
   F[k]=v;
-  el.closest('[id^="fr-"]').querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  var row=el.closest('.frow');
+  if(row)row.querySelectorAll('.chip').forEach(function(c){c.classList.remove('on');});
   el.classList.add('on');
   applyF();
 }
+
+function applyScreen(screen){
+  // Toggle off if already active
+  if(activeScreen===screen){
+    activeScreen=null;
+    document.querySelectorAll('.opp-btn').forEach(function(b){b.classList.remove('active');});
+    resetFilters();
+    return;
+  }
+  activeScreen=screen;
+  document.querySelectorAll('.opp-btn').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('opp-'+screen).classList.add('active');
+  // Reset all filters first, then apply screen-specific ones
+  F={gla:'all',own:'all',tx:'all',zone:F.zone,height:'all',vac:'all',val:'all',niy:'all',wault:'all'};
+  document.querySelectorAll('.frow .chip').forEach(function(c){c.classList.remove('on');});
+  document.querySelectorAll('.frow .chip.all').forEach(function(c){c.classList.add('on');});
+  if(screen==='offmarket'){
+    // Private + last tx >8 yrs + WAULT <3 yrs
+    F.own='Private'; F.tx='old'; F.wault='short';
+    setChipActive('fr-own','Private'); setChipActive('fr-tx','>8 yrs'); setChipActive('fr-wault','<3 yrs');
+  } else if(screen==='valueadd'){
+    // Vacancy >0 OR yield >5% — we use vacancy high and wide yield as best approximation
+    F.vac='high'; F.niy='wide';
+    setChipActive('fr-vac','>10%'); setChipActive('fr-niy','>5%');
+  } else if(screen==='core'){
+    // Fully let + WAULT 6+ + yield <5%
+    F.vac='full'; F.wault='long'; F.niy='core';
+    setChipActive('fr-vac','Fully let'); setChipActive('fr-wault','6+ yrs'); setChipActive('fr-niy','<4%');
+  } else if(screen==='gradea'){
+    // 12m+ height + fully let + >10k sqm
+    F.height='grade'; F.vac='full'; F.gla='large';
+    setChipActive('fr-height','12m+'); setChipActive('fr-vac','Fully let'); setChipActive('fr-gla','>30k');
+  }
+  applyF();
+}
+
+function setChipActive(rowId, label){
+  var row=document.getElementById(rowId);
+  if(!row)return;
+  row.querySelectorAll('.chip').forEach(function(c){
+    c.classList.remove('on');
+    if(c.textContent.trim()===label)c.classList.add('on');
+  });
+}
+
+function resetFilters(){
+  activeScreen=null;
+  document.querySelectorAll('.opp-btn').forEach(function(b){b.classList.remove('active');});
+  F={gla:'all',own:'all',tx:'all',zone:'all',height:'all',vac:'all',val:'all',niy:'all',wault:'all'};
+  document.querySelectorAll('.frow .chip').forEach(function(c){c.classList.remove('on');});
+  document.querySelectorAll('.frow .chip.all').forEach(function(c){c.classList.add('on');});
+  document.querySelectorAll('.zchip').forEach(function(c,i){c.classList.toggle('on',i===0);});
+  if(currentZone)backToOv(); else applyF();
+}
+
 function setZone(v,el){
-  document.querySelectorAll('.zchip').forEach(c=>c.classList.remove('on'));el.classList.add('on');
+  document.querySelectorAll('.zchip').forEach(function(c){c.classList.remove('on');});
+  el.classList.add('on');
   if(v==='all'&&currentZone){backToOv();return;}
   if(v!=='all'){zoomZone(v);return;}
-  F.zone=v;applyF();
-}
-function applyF(){renderList();updateCnt();if(currentZone)filterPolys();else{hidePolys();renderZoneMarkers();}}
-function updateCnt(){
-  const a=getFiltered();
-  document.getElementById('visCnt').textContent=a.length;
-  document.getElementById('totSqm').textContent=(a.reduce((s,x)=>s+x.gla,0)/1e6).toFixed(1)+'M sqm';
+  F.zone=v; applyF();
 }
 
-// LIST
+function applyF(){
+  renderList(); updateCnt();
+  if(currentZone){clearAssetMarkers();buildAssetMarkers(currentZone);}
+  else{clearAssetMarkers();renderZoneMarkers();}
+}
+
+function updateCnt(){
+  var a=getFiltered();
+  document.getElementById('visCnt').textContent=a.length;
+  document.getElementById('totSqm').textContent=(a.reduce(function(s,x){return s+x.gla;},0)/1e6).toFixed(1)+'M sqm';
+}
+
+// ── LIST ──
 function renderList(){
-  const assets=getFiltered();
-  const disp=currentZone?assets.filter(a=>a.zone===currentZone):assets;
-  const el=document.getElementById('alist');
+  var assets=getFiltered();
+  var disp=currentZone?assets.filter(function(a){return a.zone===currentZone;}):assets;
+  var el=document.getElementById('alist');
   if(!disp.length){el.innerHTML='<div class="empty">No assets match current filters.</div>';updateCnt();return;}
-  el.innerHTML=disp.map(a=>`
-    <div class="aitem${a.id===selectedId?' on':''}" data-id="${a.id}" onclick="clickAsset('${a.id}')">
-      <div class="adot" style="background:${oc(a.ownerType)}"></div>
-      <div class="ainfo">
-        <div class="aname">${a.name}</div>
-        <div class="ameta">${ZONES[a.zone]?.name?.split(' / ')[0]} · ${a.ownerType}</div>
-        <div class="agla">${fmtGLA(a.gla)} sqm${a.estValue?' · €'+a.estValue+'m':''}</div>
-      </div>
-      <div class="aflag" onclick="toggleWL(event,'${a.id}')">${watchlist.includes(a.id)?'★':'☆'}</div>
-    </div>`).join('');
+  el.innerHTML=disp.map(function(a){
+    return '<div class="aitem'+(a.id===selectedId?' on':'')+'" data-id="'+a.id+'" onclick="clickAsset(\''+a.id+'\')">'+
+      '<div class="adot" style="background:'+oc(a.ownerType)+'"></div>'+
+      '<div class="ainfo">'+
+      '<div class="aname">'+a.name+'</div>'+
+      '<div class="ameta">'+(ZONES[a.zone]?ZONES[a.zone].name.split(' / ')[0]:'')+' · '+a.ownerType+'</div>'+
+      '<div class="agla">'+fmtGLA(a.gla)+' sqm'+(a.estValue?' · €'+a.estValue+'m':'')+' </div>'+
+      '</div>'+
+      '<div class="aflag" onclick="toggleWL(event,\''+a.id+'\')">'+(watchlist.indexOf(a.id)!==-1?'★':'☆')+'</div>'+
+      '</div>';
+  }).join('');
   updateCnt();
 }
+
 function clickAsset(id){
-  const a=ASSETS.find(x=>x.id===id);if(!a)return;
-  if(a.zone!==currentZone){zoomZone(a.zone);setTimeout(()=>{openDrawer(id);map.panTo([a.lng,a.lat]);},1450);}
-  else{openDrawer(id);map.panTo([a.lng,a.lat],{duration:600});}
+  var a=ASSETS.find(function(x){return x.id===id;});
+  if(!a)return;
+  if(a.zone!==currentZone){
+    zoomZone(a.zone);
+    setTimeout(function(){openDrawer(id);map.panTo([a.lat,a.lng]);},1450);
+  } else {
+    openDrawer(id);
+    map.panTo([a.lat,a.lng]);
+  }
 }
 
-// WATCHLIST
+// ── WATCHLIST ──
 function toggleWL(e,id){
   e.stopPropagation();
-  const i=watchlist.indexOf(id);if(i===-1)watchlist.push(id);else watchlist.splice(i,1);
-  updateWLUI();renderList();
-  if(selectedId===id){const isW=watchlist.includes(id);const btn=document.getElementById('wlBtn');btn.textContent=isW?'★ On Watchlist':'☆ Add to Watchlist';btn.style.background=isW?'#7A3A12':'#C8692A';}
+  var i=watchlist.indexOf(id);
+  if(i===-1)watchlist.push(id); else watchlist.splice(i,1);
+  updateWLUI(); renderList();
+  if(selectedId===id){
+    var isW=watchlist.indexOf(id)!==-1;
+    var btn=document.getElementById('wlBtn');
+    btn.textContent=isW?'★ On Watchlist':'☆ Add to Watchlist';
+    btn.style.background=isW?'#7A3A12':'#C8692A';
+  }
 }
-function toggleWLfromDrawer(){if(selectedId)toggleWL({stopPropagation:()=>{}},selectedId);}
-function updateWLUI(){const n=watchlist.length;const el=document.getElementById('wlCount');el.textContent=n;el.classList.toggle('on',n>0);renderWLPanel();}
+function toggleWLfromDrawer(){if(selectedId)toggleWL({stopPropagation:function(){}},selectedId);}
+function updateWLUI(){
+  var n=watchlist.length;
+  var el=document.getElementById('wlCount');
+  el.textContent=n; el.classList.toggle('on',n>0);
+  renderWLPanel();
+}
 function renderWLPanel(){
-  const b=document.getElementById('wlb');
+  var b=document.getElementById('wlb');
   if(!watchlist.length){b.innerHTML='<div class="wle">No assets added yet.<br>Click ☆ on any asset to track it.</div>';return;}
-  b.innerHTML=watchlist.map(id=>{const a=ASSETS.find(x=>x.id===id);return`<div class="wli"><div class="wlin"><div class="wlin-n">${a.name}</div><div class="wlin-m">${ZONES[a.zone]?.name} · ${fmtGLA(a.gla)} sqm · ${a.ownerType}</div></div><div class="wlr" onclick="toggleWL({stopPropagation:()=>{}}'${id}')">✕</div></div>`;}).join('');
+  b.innerHTML=watchlist.map(function(id){
+    var a=ASSETS.find(function(x){return x.id===id;});
+    return '<div class="wli">'+
+      '<div class="wlin"><div class="wlin-n">'+a.name+'</div>'+
+      '<div class="wlin-m">'+(ZONES[a.zone]?ZONES[a.zone].name:'')+' · '+fmtGLA(a.gla)+' sqm · '+a.ownerType+'</div></div>'+
+      '<div class="wlr" onclick="toggleWL({stopPropagation:function(){}},\''+id+'\')">✕</div>'+
+      '</div>';
+  }).join('');
 }
 function openWL(){renderWLPanel();document.getElementById('wlov').classList.add('on');}
 function closeWL(){document.getElementById('wlov').classList.remove('on');}
 function exportWL(){
   if(!watchlist.length)return;
-  const h=['Name','Zone','Address','GLA (sqm)','Year Built','Clear Height (m)','Docks','Owner','Owner Type','Last Tx Date','Last Tx Price (€m)','Est Value (€m)','NIY (%)','WAULT (yrs)','Vacancy (%)'];
-  const rows=watchlist.map(id=>{const a=ASSETS.find(x=>x.id===id);return[a.name,ZONES[a.zone]?.name,a.address,a.gla,a.built,a.height,a.docks,a.owner,a.ownerType,a.lastTxDate||'',a.lastTxPrice||'',a.estValue||'',a.yield||'',a.wault||'',a.vacancy];});
-  const csv=[h,...rows].map(r=>r.join(',')).join('\n');
-  const bl=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download='radar-watchlist.csv';a.click();
+  var h=['Name','Zone','Address','GLA (sqm)','Year Built','Clear Height (m)','Docks','Owner','Owner Type','Last Tx Date','Last Tx Price (€m)','Est Value (€m)','NIY (%)','WAULT (yrs)','Vacancy (%)'];
+  var rows=watchlist.map(function(id){
+    var a=ASSETS.find(function(x){return x.id===id;});
+    return[a.name,ZONES[a.zone]?ZONES[a.zone].name:'',a.address,a.gla,a.built,a.height,a.docks,a.owner,a.ownerType,a.lastTxDate||'',a.lastTxPrice||'',a.estValue||'',a.yield||'',a.wault||'',a.vacancy];
+  });
+  var csv=[h].concat(rows).map(function(r){return r.join(',');}).join('\n');
+  var bl=new Blob([csv],{type:'text/csv'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(bl); a.download='radar-watchlist.csv'; a.click();
 }
 
-// MODALS
+// ── MODALS ──
 function openAlert(){document.getElementById('alertMov').classList.add('on');}
 function closeAlert(){document.getElementById('alertMov').classList.remove('on');}
 function openUpload(){document.getElementById('upMov').classList.add('on');}
 function closeUpload(){document.getElementById('upMov').classList.remove('on');}
-function handleUpload(e){const f=e.target.files[0];if(!f)return;const z=document.querySelector('.uz');z.innerHTML=`<div style="font-size:28px;margin-bottom:8px">✓</div><div style="font-size:13px;color:#1a6b3a;font-weight:500">${f.name} uploaded</div><div style="font-size:11px;color:#aaa;margin-top:4px">Data will be merged with base layer on next render</div>`;}
-function dlTemplate(){const csv='lat,lng,name,address,gla_sqm,built,height_m,docks,owner,owner_type,last_tx_date,last_tx_price_eur_m,vacancy_pct\n51.9621,4.0423,My Warehouse,"Address here",25000,2018,12.5,32,Owner Name,Institutional,2022-06,45.0,0';const bl=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download='radar-upload-template.csv';a.click();}
+function handleUpload(e){
+  var f=e.target.files[0]; if(!f)return;
+  var z=document.querySelector('.uz');
+  z.innerHTML='<div style="font-size:28px;margin-bottom:8px">✓</div><div style="font-size:13px;color:#1a6b3a;font-weight:500">'+f.name+' uploaded</div><div style="font-size:11px;color:#aaa;margin-top:4px">Data will be merged with base layer on next render</div>';
+}
+function dlTemplate(){
+  var csv='lat,lng,name,address,gla_sqm,built,height_m,docks,owner,owner_type,last_tx_date,last_tx_price_eur_m,vacancy_pct\n51.9621,4.0423,My Warehouse,"Address here",25000,2018,12.5,32,Owner Name,Institutional,2022-06,45.0,0';
+  var bl=new Blob([csv],{type:'text/csv'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(bl); a.download='radar-upload-template.csv'; a.click();
+}
 
-document.addEventListener('DOMContentLoaded',init);
+// ── DRAG DIVIDER ──
+function initDrag(){
+  var divider=document.getElementById('dragDivider');
+  var filt=document.querySelector('.filt');
+  var alist=document.getElementById('alist');
+  var lp=document.querySelector('.lp');
+  var dragging=false, startY=0, startFiltH=0, startAlistH=0;
+
+  // Set initial heights
+  var lpH=lp.offsetHeight;
+  var headH=document.querySelector('.lp-head').offsetHeight;
+  var noteH=document.querySelector('.data-note').offsetHeight;
+  var available=lpH-headH-noteH-12; // 12 = divider height
+  filt.style.height=Math.round(available*0.55)+'px';
+  alist.style.height=Math.round(available*0.45)+'px';
+  filt.style.flex='none';
+  alist.style.flex='none';
+
+  divider.addEventListener('mousedown',function(e){
+    dragging=true;
+    startY=e.clientY;
+    startFiltH=filt.offsetHeight;
+    startAlistH=alist.offsetHeight;
+    document.body.style.cursor='ns-resize';
+    document.body.style.userSelect='none';
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove',function(e){
+    if(!dragging)return;
+    var dy=e.clientY-startY;
+    var newFilt=Math.max(60,startFiltH+dy);
+    var newAlist=Math.max(60,startAlistH-dy);
+    // Don't exceed available space
+    if(newFilt+newAlist>available+10)return;
+    filt.style.height=newFilt+'px';
+    alist.style.height=newAlist+'px';
+  });
+
+  document.addEventListener('mouseup',function(){
+    if(!dragging)return;
+    dragging=false;
+    document.body.style.cursor='';
+    document.body.style.userSelect='';
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function(){init();initDrag();});
 </script>
 </body>
 </html>
