@@ -4,7 +4,6 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Radar — Logistics Real Estate Scanner</title>
-<link rel="icon" type="image/png" href="https://res.cloudinary.com/dsgfts9gp/image/upload/Gemini_Generated_Image_uao02uao02uao02u-remove-bg-io_mb5sys.png"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -63,25 +62,19 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:56px;padding:0 24px;
 .aflag{font-size:14px;color:#E8E5DE;flex-shrink:0;cursor:pointer;transition:color 0.12s;margin-top:2px}
 .aflag:hover{color:#C8692A}
 .empty{padding:32px 16px;text-align:center;color:#aaa;font-size:12px}
-/* DATA NOTE */
-.data-note{padding:12px 16px;border-top:0.5px solid #E8E5DE;flex-shrink:0;background:#F7F5F1}
-.data-note-title{font-size:10px;font-weight:600;color:#aaa;letter-spacing:0.09em;text-transform:uppercase;margin-bottom:6px}
-.data-note-body{font-size:11px;color:#888;line-height:1.6}
-.data-note-prod{margin-top:8px;padding:8px 10px;background:#FBF0E9;border-radius:6px;border-left:2px solid #C8692A}
-.data-note-prod-title{font-size:10px;font-weight:600;color:#7A3A12;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:3px}
-.data-note-prod-body{font-size:11px;color:#7A3A12;line-height:1.55}
+
 /* RIGHT COLUMN */
 .right-col{flex:1;display:flex;flex-direction:column;min-width:0}
 /* OPPORTUNITY BAR */
-.opp-bar{flex-shrink:0;height:56px;background:#D6E4F0;border-bottom:0.5px solid #B8CEDF;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 24px;overflow-x:auto}
+.opp-bar{flex-shrink:0;height:56px;background:#0F2744;border-bottom:0.5px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;gap:8px;padding:0 24px;overflow-x:auto}
 .opp-bar::-webkit-scrollbar{display:none}
-.opp-label{font-size:10px;font-weight:600;color:#4A6A8A;letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap;margin-right:8px;flex-shrink:0}
-.opp-btn{display:flex;align-items:center;gap:0;padding:8px 16px;border-radius:8px;cursor:pointer;border:1px solid rgba(15,39,68,0.18);background:rgba(255,255,255,0.5);transition:all 0.15s;flex-shrink:0;white-space:nowrap}
-.opp-btn:hover{background:rgba(255,255,255,0.8);border-color:rgba(15,39,68,0.3)}
+.opp-label{font-size:10px;font-weight:600;color:rgba(255,255,255,0.35);letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap;margin-right:8px;flex-shrink:0}
+.opp-btn{display:flex;align-items:center;gap:0;padding:8px 16px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);transition:all 0.15s;flex-shrink:0;white-space:nowrap}
+.opp-btn:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.25)}
 .opp-btn.active{background:#C8692A;border-color:#C8692A}
 .opp-icon{display:none}
-.opp-name{font-size:12px;font-weight:600;color:#0F2744;line-height:1.2}
-.opp-desc{font-size:10px;color:#4A6A8A;margin-top:2px}
+.opp-name{font-size:12px;font-weight:600;color:#fff;line-height:1.2}
+.opp-desc{font-size:10px;color:rgba(255,255,255,0.45);margin-top:2px}
 
 /* MAP WRAPPER — now inside right-col */
 .mwrap{flex:1;position:relative;min-height:0}
@@ -182,6 +175,18 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:56px;padding:0 24px;
 .uz{border:1.5px dashed #E8E5DE;border-radius:8px;padding:32px;text-align:center;cursor:pointer;transition:all 0.15s;margin:16px 0}
 .uz:hover{border-color:#C8692A;background:#FBF0E9}
 input[type=file]{display:none}
+/* DATA NOTE POPOVER */
+.dn-popover{position:fixed;top:64px;right:16px;z-index:2000;width:280px;background:#fff;border:0.5px solid #E8E5DE;border-radius:10px;box-shadow:0 8px 24px rgba(15,39,68,0.15);opacity:0;pointer-events:none;transform:translateY(-6px);transition:opacity 0.18s,transform 0.18s}
+.dn-popover.on{opacity:1;pointer-events:auto;transform:translateY(0)}
+.dn-arrow{position:absolute;top:-6px;right:72px;width:10px;height:10px;background:#fff;border-left:0.5px solid #E8E5DE;border-top:0.5px solid #E8E5DE;transform:rotate(45deg)}
+.dn-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 8px}
+.dn-title{font-size:11px;font-weight:600;color:#aaa;letter-spacing:0.09em;text-transform:uppercase}
+.dn-close{background:none;border:none;font-size:14px;color:#aaa;cursor:pointer;line-height:1;padding:0}
+.dn-close:hover{color:#555}
+.dn-body{font-size:12px;color:#888;line-height:1.6;padding:0 14px 10px}
+.dn-prod{margin:0 10px 12px;padding:10px 12px;background:#FBF0E9;border-radius:6px;border-left:2px solid #C8692A}
+.dn-prod-title{font-size:10px;font-weight:600;color:#7A3A12;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px}
+.dn-prod-body{font-size:11px;color:#7A3A12;line-height:1.55}
 </style>
 </head>
 <body>
@@ -193,6 +198,7 @@ input[type=file]{display:none}
   </div>
   <div class="nav-right">
     <div class="nav-badge">🇳🇱 Netherlands · Demo</div>
+    <button class="nav-btn outline" onclick="toggleDataNote()" id="dataNoteBtn">ⓘ Data</button>
     <button class="nav-btn outline" onclick="openUpload()">↑ Upload Database</button>
     <button class="nav-btn" onclick="openWL()">☆ Watchlist <span class="wl-count" id="wlCount">0</span></button>
   </div>
@@ -280,14 +286,6 @@ input[type=file]{display:none}
       <div class="drag-handle-bar"></div>
     </div>
     <div class="alist" id="alist"></div>
-    <div class="data-note">
-      <div class="data-note-title">Data Methodology</div>
-      <div class="data-note-body">Demo dataset — <strong style="color:#555">95 curated assets</strong> with market-representative financials. Owner types, yield ranges, and submarket dynamics reflect real NL logistics benchmarks.</div>
-      <div class="data-note-prod">
-        <div class="data-note-prod-title">Production Integration</div>
-        <div class="data-note-prod-body">Real asset data requires <strong>BAG API</strong> (NL govt, free — location + GLA) and <strong>MSCI RCA / CoStar</strong> (transaction history, ownership). Upload your own dataset via CSV using the button above.</div>
-      </div>
-    </div>
   </div>
   <div class="right-col">
     <div class="opp-bar">
@@ -342,6 +340,19 @@ input[type=file]{display:none}
     </div>
     </div><!-- end mwrap -->
   </div><!-- end right-col -->
+<!-- DATA NOTE POPOVER -->
+<div class="dn-popover" id="dnPopover">
+  <div class="dn-arrow"></div>
+  <div class="dn-head">
+    <span class="dn-title">Data Methodology</span>
+    <button class="dn-close" onclick="closeDataNote()">✕</button>
+  </div>
+  <div class="dn-body">Demo dataset — <strong>95 curated assets</strong> with market-representative financials. Owner types, yield ranges, and submarket dynamics reflect real NL logistics benchmarks.</div>
+  <div class="dn-prod">
+    <div class="dn-prod-title">Production Integration</div>
+    <div class="dn-prod-body">Real asset data requires <strong>BAG API</strong> (NL govt, free — location + GLA) and <strong>MSCI RCA / CoStar</strong> (transaction history, ownership). Upload your own dataset via CSV using the button above.</div>
+  </div>
+</div>
 <!-- WATCHLIST -->
 <div class="wlov" id="wlov" onclick="if(event.target===this)closeWL()">
   <div class="wlp">
@@ -902,8 +913,7 @@ function initDrag(){
   // Set initial heights
   var lpH=lp.offsetHeight;
   var headH=document.querySelector('.lp-head').offsetHeight;
-  var noteH=document.querySelector('.data-note').offsetHeight;
-  var available=lpH-headH-noteH-12; // 12 = divider height
+  var available=lpH-headH-12; // 12 = divider height
   filt.style.height=Math.round(available*0.55)+'px';
   alist.style.height=Math.round(available*0.45)+'px';
   filt.style.flex='none';
@@ -937,6 +947,22 @@ function initDrag(){
     document.body.style.userSelect='';
   });
 }
+
+function toggleDataNote(){
+  var p=document.getElementById('dnPopover');
+  p.classList.toggle('on');
+}
+function closeDataNote(){
+  document.getElementById('dnPopover').classList.remove('on');
+}
+// Close popover on outside click
+document.addEventListener('click',function(e){
+  var p=document.getElementById('dnPopover');
+  var btn=document.getElementById('dataNoteBtn');
+  if(p&&p.classList.contains('on')&&!p.contains(e.target)&&e.target!==btn&&!btn.contains(e.target)){
+    p.classList.remove('on');
+  }
+});
 
 document.addEventListener('DOMContentLoaded', function(){init();initDrag();});
 </script>
