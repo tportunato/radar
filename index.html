@@ -64,8 +64,16 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:56px;padding:0 24px;
 .aflag:hover{color:#C8692A}
 .empty{padding:32px 16px;text-align:center;color:#aaa;font-size:12px}
 /* DATA NOTE */
-.data-note{padding:12px 16px;border-top:0.5px solid #E8E5DE;flex-shrink:0;background:#F7F5F1}
-.data-note-title{font-size:10px;font-weight:600;color:#aaa;letter-spacing:0.09em;text-transform:uppercase;margin-bottom:6px}
+.data-note{border-top:0.5px solid #E8E5DE;flex-shrink:0;background:#F7F5F1}
+.data-note-toggle{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;cursor:pointer;user-select:none}
+.data-note-toggle:hover{background:#F0EDE8}
+.data-note-toggle-left{display:flex;align-items:center;gap:7px}
+.data-note-icon{width:16px;height:16px;border-radius:50%;background:#ccc;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.data-note-label{font-size:10px;font-weight:600;color:#aaa;letter-spacing:0.09em;text-transform:uppercase}
+.data-note-chevron{font-size:10px;color:#ccc;transition:transform 0.2s}
+
+.data-note-content{display:none;padding:0 16px 12px}
+
 .data-note-body{font-size:11px;color:#888;line-height:1.6}
 .data-note-prod{margin-top:8px;padding:8px 10px;background:#FBF0E9;border-radius:6px;border-left:2px solid #C8692A}
 .data-note-prod-title{font-size:10px;font-weight:600;color:#7A3A12;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:3px}
@@ -251,11 +259,21 @@ input[type=file]{display:none}
   </div>
   <div class="nav-right">
     <div class="nav-badge">🇳🇱 Netherlands · Demo</div>
-    <button class="nav-btn" id="aiImportBtn" onclick="openAIImport()" style="background:linear-gradient(135deg,rgba(200,105,42,0.25),rgba(200,105,42,0.1));border-color:rgba(200,105,42,0.4);color:#fff;">✦ AI Import</button>
+    <button class="nav-btn outline" onclick="toggleDatasetInfo()" id="datasetInfoBtn">Dataset ▾</button>
+    <button class="nav-btn" id="aiImportBtn" onclick="openAIImport()" style="background:linear-gradient(135deg,rgba(200,105,42,0.25),rgba(200,105,42,0.1));border-color:rgba(200,105,42,0.4);color:#fff;">✦ AI Upload</button>
     <button class="nav-btn outline" onclick="openUpload()">↑ Upload Database</button>
     <button class="nav-btn" onclick="openWL()">☆ Watchlist <span class="wl-count" id="wlCount">0</span></button>
   </div>
 </nav>
+<!-- DATASET INFO DROPDOWN -->
+<div id="datasetInfoPanel" style="display:none;position:fixed;top:56px;right:24px;z-index:999;width:320px;background:#fff;border:0.5px solid #E8E5DE;border-radius:10px;box-shadow:0 8px 24px rgba(15,39,68,0.15);padding:16px;animation:fu 0.15s ease;">
+  <div style="font-size:10px;font-weight:600;color:#aaa;letter-spacing:0.09em;text-transform:uppercase;margin-bottom:8px">Data Methodology</div>
+  <div style="font-size:12px;color:#555;line-height:1.65;margin-bottom:12px">Demo dataset — <strong style="color:#0F2744">95 curated assets</strong> with market-representative financials. Owner types, yield ranges, and submarket dynamics reflect real NL logistics benchmarks.</div>
+  <div style="background:#FBF0E9;border-radius:8px;padding:10px 12px;border-left:2px solid #C8692A">
+    <div style="font-size:10px;font-weight:600;color:#7A3A12;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px">Production Integration</div>
+    <div style="font-size:11px;color:#7A3A12;line-height:1.6">Real asset data requires <strong>BAG API</strong> (NL govt, free — location + GLA) and <strong>MSCI RCA / CoStar</strong> (transaction history, ownership). Upload your own dataset via CSV using the AI Import button.</div>
+  </div>
+</div>
 <div class="app-body">
   <div class="lp">
     <div class="lp-head">
@@ -339,14 +357,7 @@ input[type=file]{display:none}
       <div class="drag-handle-bar"></div>
     </div>
     <div class="alist" id="alist"></div>
-    <div class="data-note">
-      <div class="data-note-title">Data Methodology</div>
-      <div class="data-note-body">Demo dataset — <strong style="color:#555">95 curated assets</strong> with market-representative financials. Owner types, yield ranges, and submarket dynamics reflect real NL logistics benchmarks.</div>
-      <div class="data-note-prod">
-        <div class="data-note-prod-title">Production Integration</div>
-        <div class="data-note-prod-body">Real asset data requires <strong>BAG API</strong> (NL govt, free — location + GLA) and <strong>MSCI RCA / CoStar</strong> (transaction history, ownership). Upload your own dataset via CSV using the button above.</div>
-      </div>
-    </div>
+
   </div>
   <div class="right-col">
     <div class="opp-bar">
@@ -415,7 +426,7 @@ input[type=file]{display:none}
     <div class="ai-head">
       <div class="ai-head-left">
         <span class="ai-spark">✦</span>
-        <div><div class="ai-title">AI Import</div><div class="ai-sub">Claude maps your CSV to Radar's schema automatically</div></div>
+        <div><div class="ai-title">AI Upload</div><div class="ai-sub">Claude maps your CSV to Radar's schema automatically</div></div>
       </div>
       <button class="ai-close" onclick="closeAIImport()">✕</button>
     </div>
@@ -1220,6 +1231,26 @@ function dlTemplate(){
   var a=document.createElement('a'); a.href=URL.createObjectURL(bl); a.download='radar-upload-template.csv'; a.click();
 }
 
+// ── DATASET INFO TOGGLE ──
+function toggleDatasetInfo(){
+  var panel=document.getElementById('datasetInfoPanel');
+  var isOpen=panel.style.display==='block';
+  panel.style.display=isOpen?'none':'block';
+  document.getElementById('datasetInfoBtn').style.background=isOpen?'transparent':'rgba(255,255,255,0.12)';
+  if(!isOpen){
+    document.addEventListener('click', closeDatasetInfoOnOutside);
+  }
+}
+function closeDatasetInfoOnOutside(e){
+  var panel=document.getElementById('datasetInfoPanel');
+  var btn=document.getElementById('datasetInfoBtn');
+  if(!panel.contains(e.target)&&!btn.contains(e.target)){
+    panel.style.display='none';
+    btn.style.background='transparent';
+    document.removeEventListener('click', closeDatasetInfoOnOutside);
+  }
+}
+
 // ── DRAG DIVIDER ──
 function initDrag(){
   var divider=document.getElementById('dragDivider');
@@ -1231,7 +1262,7 @@ function initDrag(){
   // Set initial heights
   var lpH=lp.offsetHeight;
   var headH=document.querySelector('.lp-head').offsetHeight;
-  var noteH=document.querySelector('.data-note').offsetHeight;
+  var noteH=0;
   var available=lpH-headH-noteH-12; // 12 = divider height
   filt.style.height=Math.round(available*0.55)+'px';
   alist.style.height=Math.round(available*0.45)+'px';
