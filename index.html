@@ -4,13 +4,12 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Radar — Logistics Real Estate Scanner</title>
-<link rel="icon" type="image/png" href="https://res.cloudinary.com/dsgfts9gp/image/upload/Gemini_Generated_Image_uao02uao02uao02u-remove-bg-io_mb5sys.png"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:'DM Sans',sans-serif;background:#0F2744;color:#555;font-size:14px;line-height:1.65;-webkit-font-smoothing:antialiased;overflow:hidden}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:#0F2744;color:#555;font-size:14px;line-height:1.65;-webkit-font-smoothing:antialiased;overflow:auto}
 /* NAV */
 nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:56px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;background:#0F2744;border-bottom:0.5px solid rgba(255,255,255,0.1)}
 .nav-left{display:flex;align-items:center;gap:12px}
@@ -63,33 +62,19 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:56px;padding:0 24px;
 .aflag{font-size:14px;color:#E8E5DE;flex-shrink:0;cursor:pointer;transition:color 0.12s;margin-top:2px}
 .aflag:hover{color:#C8692A}
 .empty{padding:32px 16px;text-align:center;color:#aaa;font-size:12px}
-/* DATA NOTE */
-.data-note{border-top:0.5px solid #E8E5DE;flex-shrink:0;background:#F7F5F1}
-.data-note-toggle{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;cursor:pointer;user-select:none}
-.data-note-toggle:hover{background:#F0EDE8}
-.data-note-toggle-left{display:flex;align-items:center;gap:7px}
-.data-note-icon{width:16px;height:16px;border-radius:50%;background:#ccc;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.data-note-label{font-size:10px;font-weight:600;color:#aaa;letter-spacing:0.09em;text-transform:uppercase}
-.data-note-chevron{font-size:10px;color:#ccc;transition:transform 0.2s}
 
-.data-note-content{display:none;padding:0 16px 12px}
-
-.data-note-body{font-size:11px;color:#888;line-height:1.6}
-.data-note-prod{margin-top:8px;padding:8px 10px;background:#FBF0E9;border-radius:6px;border-left:2px solid #C8692A}
-.data-note-prod-title{font-size:10px;font-weight:600;color:#7A3A12;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:3px}
-.data-note-prod-body{font-size:11px;color:#7A3A12;line-height:1.55}
 /* RIGHT COLUMN */
 .right-col{flex:1;display:flex;flex-direction:column;min-width:0}
 /* OPPORTUNITY BAR */
-.opp-bar{flex-shrink:0;height:56px;background:#D6E4F0;border-bottom:0.5px solid #B8CEDF;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 24px;overflow-x:auto}
+.opp-bar{flex-shrink:0;height:56px;background:#0F2744;border-bottom:0.5px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;gap:8px;padding:0 24px;overflow-x:auto}
 .opp-bar::-webkit-scrollbar{display:none}
-.opp-label{font-size:10px;font-weight:600;color:#4A6A8A;letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap;margin-right:8px;flex-shrink:0}
-.opp-btn{display:flex;align-items:center;gap:0;padding:8px 16px;border-radius:8px;cursor:pointer;border:1px solid rgba(15,39,68,0.18);background:rgba(255,255,255,0.5);transition:all 0.15s;flex-shrink:0;white-space:nowrap}
-.opp-btn:hover{background:rgba(255,255,255,0.8);border-color:rgba(15,39,68,0.3)}
+.opp-label{font-size:10px;font-weight:600;color:rgba(255,255,255,0.35);letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap;margin-right:8px;flex-shrink:0}
+.opp-btn{display:flex;align-items:center;gap:0;padding:8px 16px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);transition:all 0.15s;flex-shrink:0;white-space:nowrap}
+.opp-btn:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.25)}
 .opp-btn.active{background:#C8692A;border-color:#C8692A}
 .opp-icon{display:none}
-.opp-name{font-size:12px;font-weight:600;color:#0F2744;line-height:1.2}
-.opp-desc{font-size:10px;color:#4A6A8A;margin-top:2px}
+.opp-name{font-size:12px;font-weight:600;color:#fff;line-height:1.2}
+.opp-desc{font-size:10px;color:rgba(255,255,255,0.45);margin-top:2px}
 
 /* MAP WRAPPER — now inside right-col */
 .mwrap{flex:1;position:relative;min-height:0}
@@ -190,67 +175,154 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:56px;padding:0 24px;
 .uz{border:1.5px dashed #E8E5DE;border-radius:8px;padding:32px;text-align:center;cursor:pointer;transition:all 0.15s;margin:16px 0}
 .uz:hover{border-color:#C8692A;background:#FBF0E9}
 input[type=file]{display:none}
-/* AI IMPORT MODAL */
-.ai-mov{position:fixed;inset:0;z-index:950;background:rgba(15,39,68,0.6);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center}
-.ai-mov.on{display:flex}
-.ai-box{background:#fff;border-radius:14px;width:680px;max-width:95vw;max-height:88vh;display:flex;flex-direction:column;border:0.5px solid #E8E5DE;animation:fu 0.22s ease;overflow:hidden}
-.ai-head{padding:20px 24px;background:#0F2744;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.ai-head-left{display:flex;align-items:center;gap:10px}
-.ai-spark{font-size:18px}
-.ai-title{font-size:15px;font-weight:600;color:#fff}
-.ai-sub{font-size:11px;color:rgba(255,255,255,0.45);margin-top:2px}
-.ai-close{background:none;border:none;font-size:18px;color:rgba(255,255,255,0.5);cursor:pointer;line-height:1}
-.ai-close:hover{color:#fff}
-.ai-body{flex:1;overflow-y:auto;padding:24px}
-.ai-body::-webkit-scrollbar{width:4px}
-.ai-body::-webkit-scrollbar-thumb{background:#E8E5DE;border-radius:2px}
-.ai-step{display:none}
-.ai-step.on{display:block}
-.ai-dz{border:1.5px dashed #B8CEDF;border-radius:10px;padding:40px 24px;text-align:center;cursor:pointer;transition:all 0.15s;background:#F7FBFF}
-.ai-dz:hover,.ai-dz.drag{border-color:#C8692A;background:#FBF0E9}
-.ai-dz-icon{font-size:36px;margin-bottom:12px}
-.ai-dz-title{font-size:14px;font-weight:600;color:#0F2744;margin-bottom:6px}
-.ai-dz-sub{font-size:12px;color:#888}
-.ai-schema{margin-top:20px;background:#F7F5F1;border-radius:8px;padding:14px 16px}
-.ai-schema-title{font-size:10px;font-weight:600;color:#aaa;letter-spacing:0.09em;text-transform:uppercase;margin-bottom:10px}
-.ai-schema-grid{display:flex;flex-wrap:wrap;gap:6px}
-.ai-field{font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px;background:#E8EDF3;color:#0F2744}
-.ai-field.req{background:#FBF0E9;color:#7A3A12;border:0.5px solid #C8692A}
-.ai-proc{text-align:center;padding:32px 0}
-.ai-proc-icon{font-size:42px;margin-bottom:16px}
-.ai-proc-title{font-size:15px;font-weight:600;color:#0F2744;margin-bottom:8px}
-.ai-proc-sub{font-size:13px;color:#888;line-height:1.65}
-.ai-progress{margin:24px auto;width:280px;height:4px;background:#E8E5DE;border-radius:2px;overflow:hidden}
-.ai-progress-bar{height:100%;background:linear-gradient(90deg,#C8692A,#E8A060);border-radius:2px;width:0%;transition:width 0.4s ease}
-.ai-log{margin-top:20px;background:#F7F5F1;border-radius:8px;padding:12px 16px;text-align:left;max-height:140px;overflow-y:auto}
-.ai-log-line{font-size:11px;color:#555;line-height:1.8;display:flex;align-items:center;gap:8px}
-.ai-log-line.done{color:#1a6b3a}
-.ai-log-line.warn{color:#7a5200}
-.ai-log-line.err{color:#7a1a1a}
-.ai-summary{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
-.ai-sum-card{flex:1;min-width:100px;background:#F7F5F1;border-radius:8px;padding:10px 14px;text-align:center}
-.ai-sum-n{font-size:22px;font-weight:600;color:#0F2744;line-height:1}
-.ai-sum-l{font-size:10px;color:#888;margin-top:4px}
-.ai-sum-card.warn .ai-sum-n{color:#7a5200}
-.ai-sum-card.err .ai-sum-n{color:#7a1a1a}
-.ai-sum-card.ok .ai-sum-n{color:#1a6b3a}
-.ai-table-wrap{overflow-x:auto;border:0.5px solid #E8E5DE;border-radius:8px;margin-bottom:16px}
-.ai-table{width:100%;border-collapse:collapse;font-size:11px}
-.ai-table th{background:#F7F5F1;font-weight:600;color:#aaa;letter-spacing:0.06em;text-transform:uppercase;padding:8px 12px;border-bottom:0.5px solid #E8E5DE;white-space:nowrap;text-align:left}
-.ai-table td{padding:7px 12px;border-bottom:0.5px solid #F2F0EC;color:#0F2744;white-space:nowrap}
-.ai-table tr:last-child td{border-bottom:none}
-.ai-table tr.row-warn td{background:#FFFBF0}
-.ai-table tr.row-err td{background:#FFF5F5}
-.ai-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px}
-.ai-badge.ok{background:#E8F5EE;color:#1a6b3a}
-.ai-badge.warn{background:#FEF5E7;color:#7a5200}
-.ai-badge.err{background:#FEECEC;color:#7a1a1a}
-.ai-foot{padding:16px 24px;border-top:0.5px solid #E8E5DE;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#F7F5F1}
-.ai-foot-info{font-size:11px;color:#888}
-.ai-foot-btns{display:flex;gap:8px}
+/* DATA NOTE POPOVER */
+.dn-popover{position:fixed;top:64px;right:16px;z-index:2000;width:280px;background:#fff;border:0.5px solid #E8E5DE;border-radius:10px;box-shadow:0 8px 24px rgba(15,39,68,0.15);opacity:0;pointer-events:none;transform:translateY(-6px);transition:opacity 0.18s,transform 0.18s}
+.dn-popover.on{opacity:1;pointer-events:auto;transform:translateY(0)}
+.dn-arrow{position:absolute;top:-6px;right:72px;width:10px;height:10px;background:#fff;border-left:0.5px solid #E8E5DE;border-top:0.5px solid #E8E5DE;transform:rotate(45deg)}
+.dn-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 8px}
+.dn-title{font-size:11px;font-weight:600;color:#aaa;letter-spacing:0.09em;text-transform:uppercase}
+.dn-close{background:none;border:none;font-size:14px;color:#aaa;cursor:pointer;line-height:1;padding:0}
+.dn-close:hover{color:#555}
+.dn-body{font-size:12px;color:#888;line-height:1.6;padding:0 14px 10px}
+.dn-prod{margin:0 10px 12px;padding:10px 12px;background:#FBF0E9;border-radius:6px;border-left:2px solid #C8692A}
+.dn-prod-title{font-size:10px;font-weight:600;color:#7A3A12;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px}
+.dn-prod-body{font-size:11px;color:#7A3A12;line-height:1.55}
 </style>
 </head>
 <body>
+
+<!-- ── LANDING SCREEN ── -->
+<div id="landing-screen" style="min-height:100vh;background:#ffffff;font-family:'DM Sans',sans-serif;display:flex;flex-direction:column;overflow-y:auto;">
+
+  <!-- Nav -->
+  <header style="background:#0F2744;height:56px;padding:0 48px;display:flex;align-items:center;flex-shrink:0;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <img src="https://res.cloudinary.com/dsgfts9gp/image/upload/Gemini_Generated_Image_uao02uao02uao02u-remove-bg-io_mb5sys.png" alt="" style="height:34px;width:34px;object-fit:contain;"/>
+      <div style="width:0.5px;height:16px;background:rgba(255,255,255,0.15);"></div>
+      <span style="font-size:13px;font-weight:600;color:#ffffff;letter-spacing:0.01em;">Radar</span>
+      <div style="width:4px;height:4px;border-radius:50%;background:#C8692A;"></div>
+      <span style="font-size:9px;font-weight:600;letter-spacing:0.09em;color:rgba(255,255,255,0.3);text-transform:uppercase;">Logistics RE Scanner</span>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <div style="background:#0F2744;padding:100px 48px 110px;display:flex;flex-direction:column;align-items:center;text-align:center;">
+    <div style="font-size:11px;font-weight:600;letter-spacing:0.1em;color:rgba(255,255,255,0.35);text-transform:uppercase;margin-bottom:28px;">Market Intelligence Tool</div>
+    <h1 style="font-size:40px;font-weight:600;color:#ffffff;margin:0 0 20px;letter-spacing:-0.025em;line-height:1.15;max-width:600px;">Netherlands logistics.<br/>Every warehouse, mapped.</h1>
+    <p style="font-size:15px;color:rgba(255,255,255,0.5);margin:0 0 48px;max-width:460px;line-height:1.7;font-weight:400;">Scan 95 institutional and private-held warehouses across six Dutch submarkets. Filter by ownership, yield, WAULT, and vacancy to surface off-market acquisition targets and value-add plays.</p>
+    <button onclick="startApp()" onmouseover="this.style.background='#A85520'" onmouseout="this.style.background='#C8692A'" style="padding:12px 28px;background:#C8692A;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;letter-spacing:0.01em;transition:background 0.15s;font-family:'DM Sans',sans-serif;">Get Started →</button>
+    <div style="font-size:11px;color:rgba(255,255,255,0.2);margin-top:14px;">95 assets · 6 submarkets · Netherlands</div>
+  </div>
+
+  <!-- Steps -->
+  <div style="background:#ffffff;padding:80px 48px;">
+    <div style="max-width:900px;margin:0 auto;">
+      <div style="font-size:10px;font-weight:600;letter-spacing:0.1em;color:#aaaaaa;text-transform:uppercase;margin-bottom:48px;text-align:center;">Four steps</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0 40px;">
+
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+            <span style="font-size:11px;font-weight:500;color:#C8692A;font-family:monospace;">01</span>
+          </div>
+          <div style="border-top:0.5px solid #E8E5DE;padding-top:20px;">
+            <div style="font-size:15px;font-weight:500;color:#0F2744;margin-bottom:10px;">Zone Overview</div>
+            <div style="font-size:13px;color:#888888;line-height:1.65;">Open the interactive map and explore 95 warehouses across six Dutch logistics clusters — Maasvlakte, Venlo, Schiphol, Tilburg, Almere, and Roosendaal.</div>
+          </div>
+        </div>
+
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+            <span style="font-size:11px;font-weight:500;color:#C8692A;font-family:monospace;">02</span>
+          </div>
+          <div style="border-top:0.5px solid #E8E5DE;padding-top:20px;">
+            <div style="font-size:15px;font-weight:500;color:#0F2744;margin-bottom:10px;">Filter & Screen</div>
+            <div style="font-size:13px;color:#888888;line-height:1.65;">Apply granular filters across GLA, owner type, vacancy, yield, WAULT, and clear height. Use Quick Screens to instantly surface off-market targets, value-add plays, or Grade A income assets.</div>
+          </div>
+        </div>
+
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+            <span style="font-size:11px;font-weight:500;color:#C8692A;font-family:monospace;">03</span>
+            <span style="font-size:9px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:#7A3A12;background:#FBF0E9;padding:2px 7px;border-radius:20px;">AI</span>
+          </div>
+          <div style="border-top:0.5px solid #E8E5DE;padding-top:20px;">
+            <div style="font-size:15px;font-weight:500;color:#0F2744;margin-bottom:10px;">Asset Intelligence</div>
+            <div style="font-size:13px;color:#888888;line-height:1.65;">Click any warehouse to open a full intelligence panel — ownership history, financial metrics, transaction commentary, and investment tags.</div>
+          </div>
+        </div>
+
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+            <span style="font-size:11px;font-weight:500;color:#C8692A;font-family:monospace;">04</span>
+            <span style="font-size:9px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:#7A3A12;background:#FBF0E9;padding:2px 7px;border-radius:20px;">AI</span>
+          </div>
+          <div style="border-top:0.5px solid #E8E5DE;padding-top:20px;">
+            <div style="font-size:15px;font-weight:500;color:#0F2744;margin-bottom:10px;">Watchlist & AI Upload</div>
+            <div style="font-size:13px;color:#888888;line-height:1.65;">Flag assets to your watchlist and export a structured CSV. Upload your own dataset via CSV — Claude maps fields to the schema automatically.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <div style="background:#F7F5F1;padding:64px 48px;">
+    <div style="max-width:900px;margin:0 auto;">
+      <div style="font-size:10px;font-weight:600;letter-spacing:0.1em;color:#aaaaaa;text-transform:uppercase;margin-bottom:40px;text-align:center;">What's inside</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px 64px;">
+
+        <div style="border-top:0.5px solid #E8E5DE;padding-top:20px;">
+          <div style="font-size:13px;font-weight:500;color:#0F2744;margin-bottom:6px;">95 curated assets</div>
+          <div style="font-size:13px;color:#888888;line-height:1.6;">Market-representative dataset across six NL logistics submarkets with ownership, yield, WAULT, and vacancy data.</div>
+        </div>
+
+        <div style="border-top:0.5px solid #E8E5DE;padding-top:20px;">
+          <div style="font-size:13px;font-weight:500;color:#0F2744;margin-bottom:6px;">Quick Screens</div>
+          <div style="font-size:13px;color:#888888;line-height:1.6;">One-click filters pre-set for off-market targets, value-add plays, core income, and Grade A stock.</div>
+        </div>
+
+        <div style="border-top:0.5px solid #E8E5DE;padding-top:20px;">
+          <div style="font-size:13px;font-weight:500;color:#0F2744;margin-bottom:6px;">Asset commentary</div>
+          <div style="font-size:13px;color:#888888;line-height:1.6;">Each warehouse carries a sourcing thesis — ownership rationale, hold period flags, and off-market signals.</div>
+        </div>
+
+        <div style="border-top:0.5px solid #E8E5DE;padding-top:20px;">
+          <div style="font-size:13px;font-weight:500;color:#0F2744;margin-bottom:6px;">CSV export</div>
+          <div style="font-size:13px;color:#888888;line-height:1.6;">Export your watchlist as a structured CSV ready for underwriting or pipeline tracking.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- AI strip -->
+  <div style="background:#0F2744;padding:48px;">
+    <div style="max-width:900px;margin:0 auto;display:flex;align-items:flex-start;gap:80px;">
+      <div style="flex:1;">
+        <div style="font-size:10px;font-weight:600;letter-spacing:0.1em;color:#C8692A;text-transform:uppercase;margin-bottom:16px;">AI features</div>
+        <div style="font-size:15px;font-weight:500;color:#ffffff;margin-bottom:12px;line-height:1.4;">Sourcing intelligence built into every asset</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.45);line-height:1.7;">Each warehouse carries a pre-computed sourcing thesis — ownership rationale, hold-period signals, WAULT risk flags, and off-market probability scoring. Upload your own CSV and Claude maps fields to the schema automatically.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;padding-top:38px;flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:10px;"><div style="width:3px;height:3px;border-radius:50%;background:#C8692A;"></div><span style="font-size:12px;color:rgba(255,255,255,0.5);">Off-market candidate scoring</span></div>
+        <div style="display:flex;align-items:center;gap:10px;"><div style="width:3px;height:3px;border-radius:50%;background:#C8692A;"></div><span style="font-size:12px;color:rgba(255,255,255,0.5);">Hold-period and WAULT signals</span></div>
+        <div style="display:flex;align-items:center;gap:10px;"><div style="width:3px;height:3px;border-radius:50%;background:#C8692A;"></div><span style="font-size:12px;color:rgba(255,255,255,0.5);">Owner type disposition flags</span></div>
+        <div style="display:flex;align-items:center;gap:10px;"><div style="width:3px;height:3px;border-radius:50%;background:#C8692A;"></div><span style="font-size:12px;color:rgba(255,255,255,0.5);">AI Upload — CSV field mapping</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div style="background:#ffffff;padding:24px 48px;border-top:0.5px solid #E8E5DE;">
+    <div style="font-size:11px;color:#cccccc;text-align:center;">Radar · Logistics RE Scanner · Built by Tomaso Portunato</div>
+  </div>
+
+</div>
+<!-- ── END LANDING SCREEN ── -->
+
+<!-- ── APP SCREEN ── -->
+<div id="app-screen" style="display:none;">
 <nav>
   <div class="nav-left">
     <img class="nav-logo" src="https://res.cloudinary.com/dsgfts9gp/image/upload/Gemini_Generated_Image_uao02uao02uao02u-remove-bg-io_mb5sys.png" alt="TP"/>
@@ -259,21 +331,11 @@ input[type=file]{display:none}
   </div>
   <div class="nav-right">
     <div class="nav-badge">🇳🇱 Netherlands · Demo</div>
-    <button class="nav-btn outline" onclick="toggleDatasetInfo()" id="datasetInfoBtn">Dataset ▾</button>
-    <button class="nav-btn" id="aiImportBtn" onclick="openAIImport()" style="background:linear-gradient(135deg,rgba(200,105,42,0.25),rgba(200,105,42,0.1));border-color:rgba(200,105,42,0.4);color:#fff;">✦ AI Upload</button>
+    <button class="nav-btn outline" onclick="toggleDataNote()" id="dataNoteBtn">ⓘ Data</button>
     <button class="nav-btn outline" onclick="openUpload()">↑ Upload Database</button>
     <button class="nav-btn" onclick="openWL()">☆ Watchlist <span class="wl-count" id="wlCount">0</span></button>
   </div>
 </nav>
-<!-- DATASET INFO DROPDOWN -->
-<div id="datasetInfoPanel" style="display:none;position:fixed;top:56px;right:24px;z-index:999;width:320px;background:#fff;border:0.5px solid #E8E5DE;border-radius:10px;box-shadow:0 8px 24px rgba(15,39,68,0.15);padding:16px;animation:fu 0.15s ease;">
-  <div style="font-size:10px;font-weight:600;color:#aaa;letter-spacing:0.09em;text-transform:uppercase;margin-bottom:8px">Data Methodology</div>
-  <div style="font-size:12px;color:#555;line-height:1.65;margin-bottom:12px">Demo dataset — <strong style="color:#0F2744">95 curated assets</strong> with market-representative financials. Owner types, yield ranges, and submarket dynamics reflect real NL logistics benchmarks.</div>
-  <div style="background:#FBF0E9;border-radius:8px;padding:10px 12px;border-left:2px solid #C8692A">
-    <div style="font-size:10px;font-weight:600;color:#7A3A12;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px">Production Integration</div>
-    <div style="font-size:11px;color:#7A3A12;line-height:1.6">Real asset data requires <strong>BAG API</strong> (NL govt, free — location + GLA) and <strong>MSCI RCA / CoStar</strong> (transaction history, ownership). Upload your own dataset via CSV using the AI Import button.</div>
-  </div>
-</div>
 <div class="app-body">
   <div class="lp">
     <div class="lp-head">
@@ -357,7 +419,6 @@ input[type=file]{display:none}
       <div class="drag-handle-bar"></div>
     </div>
     <div class="alist" id="alist"></div>
-
   </div>
   <div class="right-col">
     <div class="opp-bar">
@@ -412,83 +473,25 @@ input[type=file]{display:none}
     </div>
     </div><!-- end mwrap -->
   </div><!-- end right-col -->
+<!-- DATA NOTE POPOVER -->
+<div class="dn-popover" id="dnPopover">
+  <div class="dn-arrow"></div>
+  <div class="dn-head">
+    <span class="dn-title">Data Methodology</span>
+    <button class="dn-close" onclick="closeDataNote()">✕</button>
+  </div>
+  <div class="dn-body">Demo dataset — <strong>95 curated assets</strong> with market-representative financials. Owner types, yield ranges, and submarket dynamics reflect real NL logistics benchmarks.</div>
+  <div class="dn-prod">
+    <div class="dn-prod-title">Production Integration</div>
+    <div class="dn-prod-body">Real asset data requires <strong>BAG API</strong> (NL govt, free — location + GLA) and <strong>MSCI RCA / CoStar</strong> (transaction history, ownership). Upload your own dataset via CSV using the button above.</div>
+  </div>
+</div>
 <!-- WATCHLIST -->
 <div class="wlov" id="wlov" onclick="if(event.target===this)closeWL()">
   <div class="wlp">
     <div class="wlh"><div class="wlt">☆ Watchlist</div><button class="wlc" onclick="closeWL()">✕</button></div>
     <div class="wlb" id="wlb"><div class="wle">No assets added yet.<br>Click ☆ on any asset to track it.</div></div>
     <div class="wlf"><button class="btn-p" style="width:100%" onclick="exportWL()">↓ Export to CSV</button></div>
-  </div>
-</div>
-<!-- AI IMPORT MODAL -->
-<div class="ai-mov" id="aiMov" onclick="if(event.target===this)closeAIImport()">
-  <div class="ai-box">
-    <div class="ai-head">
-      <div class="ai-head-left">
-        <span class="ai-spark">✦</span>
-        <div><div class="ai-title">AI Upload</div><div class="ai-sub">Claude maps your CSV to Radar's schema automatically</div></div>
-      </div>
-      <button class="ai-close" onclick="closeAIImport()">✕</button>
-    </div>
-    <div class="ai-body">
-      <!-- STEP 1: UPLOAD -->
-      <div class="ai-step on" id="aiStep1">
-        <div class="ai-dz" id="aiDz" onclick="document.getElementById('aiFile').click()" ondragover="aiDragOver(event)" ondragleave="aiDragLeave(event)" ondrop="aiDrop(event)">
-          <div class="ai-dz-icon">📂</div>
-          <div class="ai-dz-title">Drop your CSV here or click to browse</div>
-          <div class="ai-dz-sub">Any column names — Claude will figure out the mapping</div>
-        </div>
-        <input type="file" id="aiFile" accept=".csv" onchange="aiFileSelected(event)"/>
-        <div class="ai-schema">
-          <div class="ai-schema-title">Radar schema — target fields</div>
-          <div class="ai-schema-grid">
-            <span class="ai-field req">lat ✦</span>
-            <span class="ai-field req">lng ✦</span>
-            <span class="ai-field req">name ✦</span>
-            <span class="ai-field">address</span>
-            <span class="ai-field">gla_sqm</span>
-            <span class="ai-field">built</span>
-            <span class="ai-field">height_m</span>
-            <span class="ai-field">docks</span>
-            <span class="ai-field">owner</span>
-            <span class="ai-field">owner_type</span>
-            <span class="ai-field">last_tx_date</span>
-            <span class="ai-field">last_tx_price_eur_m</span>
-            <span class="ai-field">vacancy_pct</span>
-            <span class="ai-field">yield_pct</span>
-            <span class="ai-field">wault_yrs</span>
-            <span class="ai-field">est_value_eur_m</span>
-          </div>
-          <div style="font-size:11px;color:#aaa;margin-top:10px">✦ Required &nbsp;·&nbsp; All others optional — Claude fills defaults where missing</div>
-        </div>
-      </div>
-      <!-- STEP 2: PROCESSING -->
-      <div class="ai-step" id="aiStep2">
-        <div class="ai-proc">
-          <div class="ai-proc-icon" id="aiProcIcon">✦</div>
-          <div class="ai-proc-title" id="aiProcTitle">Claude is reading your file…</div>
-          <div class="ai-proc-sub" id="aiProcSub">Analysing columns and mapping to Radar schema</div>
-          <div class="ai-progress"><div class="ai-progress-bar" id="aiBar"></div></div>
-          <div class="ai-log" id="aiLog"></div>
-        </div>
-      </div>
-      <!-- STEP 3: PREVIEW -->
-      <div class="ai-step" id="aiStep3">
-        <div class="ai-summary" id="aiSummary"></div>
-        <div class="ai-table-wrap">
-          <table class="ai-table">
-            <thead id="aiThead"></thead>
-            <tbody id="aiTbody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-    <div class="ai-foot">
-      <div class="ai-foot-info" id="aiFootInfo">Upload a CSV to get started</div>
-      <div class="ai-foot-btns" id="aiFootBtns">
-        <button class="btn-g" onclick="closeAIImport()">Cancel</button>
-      </div>
-    </div>
   </div>
 </div>
 <!-- ALERT MODAL -->
@@ -1016,205 +1019,6 @@ function exportWL(){
   var a=document.createElement('a'); a.href=URL.createObjectURL(bl); a.download='radar-watchlist.csv'; a.click();
 }
 
-
-// ── AI IMPORT ──
-var aiParsedRows=[], aiMappedRows=[], aiImportReady=false;
-
-function openAIImport(){resetAIImport();document.getElementById('aiMov').classList.add('on');}
-function closeAIImport(){document.getElementById('aiMov').classList.remove('on');}
-function resetAIImport(){
-  aiParsedRows=[];aiMappedRows=[];aiImportReady=false;
-  showAIStep(1);
-  document.getElementById('aiDz').classList.remove('drag');
-  document.getElementById('aiLog').innerHTML='';
-  document.getElementById('aiBar').style.width='0%';
-  document.getElementById('aiFootInfo').textContent='Upload a CSV to get started';
-  document.getElementById('aiFootBtns').innerHTML='<button class="btn-g" onclick="closeAIImport()">Cancel</button>';
-  document.getElementById('aiFile').value='';
-}
-function showAIStep(n){
-  [1,2,3].forEach(function(i){document.getElementById('aiStep'+i).classList.toggle('on',i===n);});
-}
-function aiDragOver(e){e.preventDefault();document.getElementById('aiDz').classList.add('drag');}
-function aiDragLeave(){document.getElementById('aiDz').classList.remove('drag');}
-function aiDrop(e){e.preventDefault();document.getElementById('aiDz').classList.remove('drag');var f=e.dataTransfer.files[0];if(f)processAIFile(f);}
-function aiFileSelected(e){var f=e.target.files[0];if(f)processAIFile(f);}
-
-function processAIFile(file){
-  showAIStep(2);
-  document.getElementById('aiProcTitle').textContent='Reading "'+file.name+'"...';
-  document.getElementById('aiProcSub').textContent='Parsing CSV structure';
-  document.getElementById('aiBar').style.width='10%';
-  var reader=new FileReader();
-  reader.onload=function(e){
-    var text=e.target.result;
-    var lines=text.trim().split(/\r?\n/);
-    if(lines.length<2){aiError('File appears empty or has no data rows.');return;}
-    var headers=parseCSVLine(lines[0]);
-    var rows=[];
-    for(var i=1;i<lines.length;i++){
-      if(!lines[i].trim())continue;
-      var vals=parseCSVLine(lines[i]);
-      var obj={};
-      headers.forEach(function(h,j){obj[h.trim()]=vals[j]?vals[j].trim():'';});
-      rows.push(obj);
-    }
-    aiParsedRows=rows;
-    aiLog('Parsed '+rows.length+' rows, '+headers.length+' columns','done');
-    aiLog('Columns: '+headers.slice(0,6).join(', ')+(headers.length>6?' + '+(headers.length-6)+' more':''),'');
-    document.getElementById('aiBar').style.width='30%';
-    setTimeout(function(){callClaudeMapper(headers,rows);},400);
-  };
-  reader.readAsText(file);
-}
-
-function parseCSVLine(line){
-  var result=[],cur='',inQ=false;
-  for(var i=0;i<line.length;i++){
-    var c=line[i];
-    if(c==='"'){inQ=!inQ;}
-    else if(c===','&&!inQ){result.push(cur);cur='';}
-    else{cur+=c;}
-  }
-  result.push(cur);
-  return result;
-}
-
-function aiLog(msg,type){
-  var el=document.getElementById('aiLog');
-  var line=document.createElement('div');
-  line.className='ai-log-line'+(type?' '+type:'');
-  line.textContent=msg;
-  el.appendChild(line);
-  el.scrollTop=el.scrollHeight;
-}
-
-function aiError(msg){
-  document.getElementById('aiProcIcon').textContent='!';
-  document.getElementById('aiProcTitle').textContent='Import failed';
-  document.getElementById('aiProcSub').textContent=msg;
-  document.getElementById('aiFootBtns').innerHTML='<button class="btn-p" onclick="resetAIImport()">Try again</button><button class="btn-g" onclick="closeAIImport()">Cancel</button>';
-}
-
-function callClaudeMapper(headers,rows){
-  aiLog('Sending to Claude for column mapping...','');
-  document.getElementById('aiBar').style.width='50%';
-  document.getElementById('aiProcTitle').textContent='Claude is mapping your columns...';
-  var sample=rows.slice(0,3);
-  var schemaDesc='lat (number, required), lng (number, required), name (string, required), address (string), gla (number sqm), built (number year), height (number metres), docks (number), owner (string), ownerType (REIT|Institutional|Private|Owner-Occupier), lastTxDate (YYYY-MM), lastTxPrice (EUR millions), vacancy (0-100 pct), yield (pct), wault (years), estValue (EUR millions)';
-  var promptText='You are a data transformation assistant for a logistics real estate tool called Radar. Target schema: '+schemaDesc+'. Input CSV headers: '+JSON.stringify(headers)+'. Sample rows (first 3): '+JSON.stringify(sample)+'. Tasks: 1) Map each input column to closest target field or null. 2) Transform all '+rows.length+' rows: fix data types, normalise ownerType to one of 4 valid values, convert dates to YYYY-MM, convert text numbers to numbers. 3) If lat/lng missing but address present, set _needsGeocode true. 4) Flag rows missing required fields as err, rows with defaults as warn, clean rows as ok. 5) Optional missing fields use null. Respond ONLY with JSON object no markdown: {"mapping":{"inputCol":"targetField"},"rows":[{"lat":0,"lng":0,"name":"","address":"","gla":null,"built":null,"height":null,"docks":null,"owner":"","ownerType":"","lastTxDate":null,"lastTxPrice":null,"vacancy":null,"yield":null,"wault":null,"estValue":null,"_status":"ok","_notes":"","_needsGeocode":false}],"summary":{"total":0,"ok":0,"warn":0,"err":0,"geocodeNeeded":0}}';
-  fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,messages:[{role:'user',content:promptText}]})
-  })
-  .then(function(r){return r.json();})
-  .then(function(data){
-    document.getElementById('aiBar').style.width='85%';
-    aiLog('Claude response received','done');
-    var text='';
-    if(data.content&&data.content.length){data.content.forEach(function(b){if(b.type==='text')text+=b.text;});}
-    try{
-      var clean=text.replace(/```json\n?|```/g,'').trim();
-      var result=JSON.parse(clean);
-      aiMappedRows=result.rows||[];
-      document.getElementById('aiBar').style.width='100%';
-      aiLog('Mapped '+aiMappedRows.length+' rows','done');
-      var s=result.summary||{};
-      if(s.warn>0)aiLog(s.warn+' rows have warnings (defaulted fields)','warn');
-      if(s.err>0)aiLog(s.err+' rows flagged (missing required fields)','err');
-      if(s.geocodeNeeded>0)aiLog(s.geocodeNeeded+' rows need geocoding - attempting...','warn');
-      setTimeout(function(){geocodeMissingRows(aiMappedRows,s,function(fr){aiMappedRows=fr;renderAIPreview(s);});},500);
-    }catch(ex){
-      aiError('Could not parse Claude response. Please try again. Error: '+ex.message);
-    }
-  })
-  .catch(function(err){aiError('Network error: '+err.message);});
-}
-
-function geocodeMissingRows(rows,summary,cb){
-  var toGeocode=rows.filter(function(r){return r._needsGeocode&&r.address;});
-  if(!toGeocode.length){cb(rows);return;}
-  aiLog('Geocoding '+toGeocode.length+' address(es) via Nominatim...','');
-  var i=0;
-  function next(){
-    if(i>=toGeocode.length){cb(rows);return;}
-    var row=toGeocode[i];i++;
-    fetch('https://nominatim.openstreetmap.org/search?format=json&q='+encodeURIComponent(row.address)+'&limit=1',{headers:{'User-Agent':'Radar-RE-Tool/1.0'}})
-    .then(function(r){return r.json();})
-    .then(function(geo){
-      if(geo&&geo.length){
-        row.lat=parseFloat(geo[0].lat);row.lng=parseFloat(geo[0].lon);
-        row._status=row._status==='err'?'warn':row._status;
-        row._notes=(row._notes||'')+' [geocoded]';
-        aiLog('Geocoded: '+String(row.address).substring(0,40),'done');
-      }else{aiLog('Could not geocode: '+String(row.address).substring(0,40),'err');}
-      setTimeout(next,300);
-    })
-    .catch(function(){setTimeout(next,300);});
-  }
-  next();
-}
-
-function renderAIPreview(summary){
-  showAIStep(3);
-  var ok=aiMappedRows.filter(function(r){return r._status==='ok';}).length;
-  var warn=aiMappedRows.filter(function(r){return r._status==='warn';}).length;
-  var err=aiMappedRows.filter(function(r){return r._status==='err';}).length;
-  var ready=ok+warn;
-  document.getElementById('aiSummary').innerHTML=
-    '<div class="ai-sum-card ok"><div class="ai-sum-n">'+ok+'</div><div class="ai-sum-l">Ready</div></div>'+
-    '<div class="ai-sum-card warn"><div class="ai-sum-n">'+warn+'</div><div class="ai-sum-l">Defaulted</div></div>'+
-    '<div class="ai-sum-card err"><div class="ai-sum-n">'+err+'</div><div class="ai-sum-l">Flagged</div></div>'+
-    '<div class="ai-sum-card"><div class="ai-sum-n">'+aiMappedRows.length+'</div><div class="ai-sum-l">Total</div></div>';
-  var cols=['name','address','lat','lng','gla','built','height','owner','ownerType','vacancy','yield','status'];
-  document.getElementById('aiThead').innerHTML='<tr>'+cols.map(function(c){return '<th>'+c+'</th>';}).join('')+'</tr>';
-  document.getElementById('aiTbody').innerHTML=aiMappedRows.slice(0,50).map(function(r){
-    var cls=r._status==='warn'?'row-warn':r._status==='err'?'row-err':'';
-    var badge=r._status==='ok'?'<span class="ai-badge ok">Ready</span>':r._status==='warn'?'<span class="ai-badge warn">Defaulted</span>':'<span class="ai-badge err">Flagged</span>';
-    return '<tr class="'+cls+'">'+
-      '<td>'+esc(r.name||'-')+'</td>'+
-      '<td>'+esc(String(r.address||'-').substring(0,28))+'</td>'+
-      '<td>'+(r.lat!=null?Number(r.lat).toFixed(4):'-')+'</td>'+
-      '<td>'+(r.lng!=null?Number(r.lng).toFixed(4):'-')+'</td>'+
-      '<td>'+(r.gla!=null?Number(r.gla).toLocaleString():'-')+'</td>'+
-      '<td>'+(r.built||'-')+'</td>'+
-      '<td>'+(r.height!=null?r.height+'m':'-')+'</td>'+
-      '<td>'+esc(r.owner||'-')+'</td>'+
-      '<td>'+esc(r.ownerType||'-')+'</td>'+
-      '<td>'+(r.vacancy!=null?r.vacancy+'%':'-')+'</td>'+
-      '<td>'+(r.yield!=null?r.yield+'%':'-')+'</td>'+
-      '<td>'+badge+'</td></tr>';
-  }).join('');
-  aiImportReady=ready>0;
-  var info=ready+' asset'+(ready!==1?'s':'')+' ready to import'+(err>0?' - '+err+' row'+(err!==1?'s':'')+' will be skipped':'');
-  document.getElementById('aiFootInfo').textContent=info;
-  document.getElementById('aiFootBtns').innerHTML='<button class="btn-g" onclick="resetAIImport()">Back</button>'+(aiImportReady?'<button class="btn-p" onclick="confirmAIImport()">Import '+ready+' assets</button>':'');
-}
-
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-
-function confirmAIImport(){
-  var importable=aiMappedRows.filter(function(r){return r._status!=='err'&&r.lat!=null&&r.lng!=null&&r.name;});
-  var ownerColors={'REIT':'#2A4A8A','Institutional':'#2A6B4A','Private':'#C8692A','Owner-Occupier':'#6B2A8A'};
-  importable.forEach(function(r,i){
-    var a={id:'ai_'+Date.now()+'_'+i,zone:'maasvlakte',name:r.name,address:r.address||'',lat:parseFloat(r.lat),lng:parseFloat(r.lng),gla:r.gla?parseInt(r.gla):10000,built:r.built?parseInt(r.built):2010,height:r.height?parseFloat(r.height):10,docks:r.docks?parseInt(r.docks):10,owner:r.owner||'Unknown',ownerType:r.ownerType||'Private',lastTxDate:r.lastTxDate||null,lastTxPrice:r.lastTxPrice?parseFloat(r.lastTxPrice):null,vacancy:r.vacancy!=null?parseFloat(r.vacancy):0,yield:r.yield?parseFloat(r.yield):null,wault:r.wault?parseFloat(r.wault):null,estValue:r.estValue?parseFloat(r.estValue):null,commentary:'Imported via AI Import. '+(r._notes||''),tags:['AI Imported']};
-    ASSETS.push(a);
-    var col=ownerColors[a.ownerType]||'#888';
-    var rad=Math.max(6,Math.min(18,Math.sqrt((a.gla||10000)/500)));
-    var m=L.circleMarker([a.lat,a.lng],{radius:rad,fillColor:col,color:'#fff',weight:1.5,fillOpacity:0.85});
-    m.bindTooltip('<strong>'+a.name+'</strong><br>'+a.ownerType+' - '+(a.gla?a.gla.toLocaleString()+' sqm':''),{permanent:false,direction:'top'});
-    m.on('click',function(){openDrawer(a.id);});
-    m.addTo(map);
-  });
-  renderList();
-  closeAIImport();
-  var ibar=document.getElementById('ibar');
-  ibar.classList.add('on');
-  document.getElementById('ibarTxt').textContent=importable.length+' asset'+(importable.length!==1?'s':'')+' imported successfully';
-  setTimeout(function(){ibar.classList.remove('on');},4000);
-}
-
 // ── MODALS ──
 function openAlert(){document.getElementById('alertMov').classList.add('on');}
 function closeAlert(){document.getElementById('alertMov').classList.remove('on');}
@@ -1231,26 +1035,6 @@ function dlTemplate(){
   var a=document.createElement('a'); a.href=URL.createObjectURL(bl); a.download='radar-upload-template.csv'; a.click();
 }
 
-// ── DATASET INFO TOGGLE ──
-function toggleDatasetInfo(){
-  var panel=document.getElementById('datasetInfoPanel');
-  var isOpen=panel.style.display==='block';
-  panel.style.display=isOpen?'none':'block';
-  document.getElementById('datasetInfoBtn').style.background=isOpen?'transparent':'rgba(255,255,255,0.12)';
-  if(!isOpen){
-    document.addEventListener('click', closeDatasetInfoOnOutside);
-  }
-}
-function closeDatasetInfoOnOutside(e){
-  var panel=document.getElementById('datasetInfoPanel');
-  var btn=document.getElementById('datasetInfoBtn');
-  if(!panel.contains(e.target)&&!btn.contains(e.target)){
-    panel.style.display='none';
-    btn.style.background='transparent';
-    document.removeEventListener('click', closeDatasetInfoOnOutside);
-  }
-}
-
 // ── DRAG DIVIDER ──
 function initDrag(){
   var divider=document.getElementById('dragDivider');
@@ -1262,8 +1046,7 @@ function initDrag(){
   // Set initial heights
   var lpH=lp.offsetHeight;
   var headH=document.querySelector('.lp-head').offsetHeight;
-  var noteH=0;
-  var available=lpH-headH-noteH-12; // 12 = divider height
+  var available=lpH-headH-12; // 12 = divider height
   filt.style.height=Math.round(available*0.55)+'px';
   alist.style.height=Math.round(available*0.45)+'px';
   filt.style.flex='none';
@@ -1298,7 +1081,34 @@ function initDrag(){
   });
 }
 
-document.addEventListener('DOMContentLoaded', function(){init();initDrag();});
+function toggleDataNote(){
+  var p=document.getElementById('dnPopover');
+  p.classList.toggle('on');
+}
+function closeDataNote(){
+  document.getElementById('dnPopover').classList.remove('on');
+}
+// Close popover on outside click
+document.addEventListener('click',function(e){
+  var p=document.getElementById('dnPopover');
+  var btn=document.getElementById('dataNoteBtn');
+  if(p&&p.classList.contains('on')&&!p.contains(e.target)&&e.target!==btn&&!btn.contains(e.target)){
+    p.classList.remove('on');
+  }
+});
+
+function startApp(){
+  document.getElementById('landing-screen').style.display='none';
+  document.getElementById('app-screen').style.display='block';
+  document.body.style.overflow='hidden';
+  // Re-trigger init now that the map container is visible
+  if(!window._appInited){window._appInited=true;init();initDrag();}
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  // Do NOT call init() on load — landing screen is shown first
+});
 </script>
+</div><!-- ── END APP SCREEN ── -->
 </body>
 </html>
